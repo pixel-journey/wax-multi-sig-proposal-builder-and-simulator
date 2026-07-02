@@ -1,27 +1,74 @@
 blueprint:
   id: wax-multi-sig-proposal-builder-and-simulator
+  name: Multi-Sig Proposal Builder & Simulator
   tier: 1
   category: security-foundational
   status: alpha-ready
-  companions:
+  version: 0.2
+
+metadata:
+  description: |
+    A powerful yet safe builder and simulator for Antelope multi-sig proposals.
+    Create, preview, validate, and simulate eosio.msig proposals with clear
+    threshold math, risk analysis, approval visualization, and direct WharfKit execution.
+  target_audience:
+    - Human developers and DAO operators managing multi-sig governance
+    - AI agents generating multi-sig proposal tools
+    - Teams building secure governance systems on WAX/Antelope
+  related_blueprints:
     - wax-permission-visualizer-and-editor
     - wax-safe-key-rotation-assistant
+    - wax-secure-key-management-and-privacy-tools
 
 features:
-  - visual_multi_sig_proposal_builder
-  - live_approval_threshold_simulation
-  - risk_scoring_engine
+  - visual_proposal_builder
+  - live_threshold_simulation
   - approval_graph_visualization
-  - eosio_msig_propose_approve_execute_flow
-  - wharfkit_native_signing
+  - risk_analysis_engine
+  - eosio_msig_compatibility
+  - wharfkit_execution
+  - multiple_integration_levels
 
-recommended_stack:
-  framework: Next.js 15
-  simulation: pure_client_js + permission_engine
-  viz: embedded PermissionTree patterns + approval graph
+integration_levels:
+  minimal:
+    description: Basic proposal form + simple simulation
+    recommended_for: Learning and quick testing
+  recommended:
+    description: Full builder + visual graphs + risk analysis + WharfKit integration
+    recommended_for: Most production and DAO use cases
+  advanced:
+    description: Advanced simulation, batch proposals, governance analytics
+    recommended_for: Complex governance or enterprise tools
 
 machine_instructions:
-  - "Create proposal builder wizard with live simulation of approvals needed"
-  - "Implement risk scoring and threshold validation for multi-sig"
-  - "Add visual approval status graph"
-  - "Support full propose → approve → execute lifecycle simulation"
+  - |
+    Build multi-step proposal creator with live simulation and clear warnings.
+  - |
+    Implement approval threshold checker and risk scoring.
+  - |
+    Add visual approval graph using PermissionTree patterns.
+  - |
+    Support propose, approve, and execute flows with strong safety features.
+  - |
+    Prioritize clarity, safety, and educational value in all flows.
+
+technical_requirements:
+  framework: Next.js 15 + TypeScript (strict)
+  styling: Tailwind + shadcn/ui + framer-motion
+  simulation: Pure client-side JavaScript + permission engine
+  signing: WharfKit
+  design_system: pixel-journey-design-system
+
+best_practices:
+  - Always simulate before broadcasting
+  - Clearly show who needs to approve and whether the threshold will be met
+  - Use strong warnings for risky configurations
+  - Make permission selection explicit and validated
+  - Provide clear explanations of why a proposal might fail
+  - Support both proposal creation and approval flows
+
+future_extensions:
+  - Advanced batch proposal simulation
+  - Governance analytics and history
+  - Integration with permission health dashboards
+  - Hardware wallet signing support
