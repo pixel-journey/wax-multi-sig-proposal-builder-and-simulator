@@ -1,0 +1,27 @@
+blueprint:
+  id: wax-multi-sig-proposal-builder-and-simulator
+  tier: 1
+  category: security-foundational
+  status: alpha-ready
+  companions:
+    - wax-permission-visualizer-and-editor
+    - wax-safe-key-rotation-assistant
+
+features:
+  - visual_multi_sig_proposal_builder
+  - live_approval_threshold_simulation
+  - risk_scoring_engine
+  - approval_graph_visualization
+  - eosio_msig_propose_approve_execute_flow
+  - wharfkit_native_signing
+
+recommended_stack:
+  framework: Next.js 15
+  simulation: pure_client_js + permission_engine
+  viz: embedded PermissionTree patterns + approval graph
+
+machine_instructions:
+  - "Create proposal builder wizard with live simulation of approvals needed"
+  - "Implement risk scoring and threshold validation for multi-sig"
+  - "Add visual approval status graph"
+  - "Support full propose → approve → execute lifecycle simulation"
