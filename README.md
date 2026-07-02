@@ -1,28 +1,45 @@
 # wax-multi-sig-proposal-builder-and-simulator — Multi-Sig Proposal Builder & Simulator
 
-> **Status:** ✅ **FULL PX PERFECTION (Alpha-Ready)** | Public Release Target: July 2026  
+> **Status:** 🔄 In Active Deep Refinement (PX Perfection Standard)  
 > **Category:** Authentication, Multi-Sig & Permission Management (Core Antelope/EOSIO)  
 > **Parent Catalog:** [pixel-journey/wax-ecosystem-blueprint-catalog](https://github.com/pixel-journey/wax-ecosystem-blueprint-catalog)
-> **Benchmark Standard:** henrikpiga/gkniftyheads-tracker + Pixel Journey retro-pixel excellence
+> **Benchmark Standard:** gkniftyheads-tracker quality + Pixel Journey retro-pixel excellence + PX Perfection Standard v1.0
 > **Companions:** [wax-permission-visualizer-and-editor](https://github.com/pixel-journey/wax-permission-visualizer-and-editor) + [wax-safe-key-rotation-assistant](https://github.com/pixel-journey/wax-safe-key-rotation-assistant)
 
-**One-sentence goal:** A powerful yet safe builder and simulator for Antelope multi-sig proposals. Create, preview, validate, and simulate `eosio.msig` proposals with clear threshold math, risk analysis, and direct WharfKit execution — all client-side.
+**One-sentence goal:** A powerful yet safe builder and simulator for Antelope multi-sig proposals. Create, preview, validate, and simulate `eosio.msig` proposals with clear threshold math, risk analysis, approval visualization, and direct WharfKit execution — all client-side with zero custom contracts.
 
 ---
 
-## 1. Educational Overview
+## 1. Educational Core — Why Multi-Sig Proposal Tooling Matters
 
-Multi-sig (M-of-N) is one of the most powerful features on WAX/Antelope, but creating proposals is error-prone and opaque. This tool makes it visual, educational, and safe.
+Multi-sig (M-of-N) is one of the most powerful security features on WAX/Antelope, but creating and managing proposals is often error-prone and opaque. Many DAOs and teams lose time, funds, or momentum due to misconfigured proposals, insufficient approvals, or misunderstanding of permission requirements.
 
-**Key Concepts Covered**:
-- How `eosio.msig` proposals work (propose → approve → execute)
-- Threshold vs weight math in real time
-- Risk of insufficient approvals or wrong permission
-- Simulation before broadcasting
+This tool makes multi-sig proposal creation visual, educational, and significantly safer.
 
-**Why This Matters**:
-- Many DAOs and teams lose funds or time due to misconfigured multi-sig proposals.
-- Good tooling dramatically increases adoption of secure multi-sig practices.
+### Key Concepts This Tool Teaches
+
+- How `eosio.msig` proposals actually work (propose → approve → execute)
+- Real-time threshold vs weight math
+- The critical importance of using the correct permission when proposing
+- Risk of insufficient approvals or wrong signer permission
+- Simulation before broadcasting (prevent failed or dangerous proposals)
+
+### Common Mistakes This Tool Helps Prevent
+
+| Mistake                              | Consequence                        | How This Tool Helps                              |
+|--------------------------------------|------------------------------------|--------------------------------------------------|
+| Proposing with wrong permission      | Proposal fails or is invalid       | Clear permission selection + validation          |
+| Insufficient approvals planned       | Proposal gets stuck                | Live simulation of required approvals            |
+| Wrong threshold calculation          | Failed execution                   | Real-time threshold math with warnings           |
+| Not understanding who can approve    | Governance confusion               | Visual approval graph + permission analysis      |
+
+### Learning Outcomes
+
+After using this blueprint, you will be able to:
+- Confidently create and simulate multi-sig proposals
+- Understand threshold math and approval requirements
+- Identify risks before broadcasting
+- Build or integrate multi-sig tooling into your own applications
 
 ---
 
@@ -61,23 +78,23 @@ machine_instructions:
   - "Build multi-step proposal creator with live simulation"
   - "Implement approval threshold checker and risk scoring"
   - "Add visual approval graph using PermissionTree patterns"
-  - "Support propose, approve, and execute flows"
+  - "Support propose, approve, and execute flows with clear warnings"
 ```
 
 ---
 
 ## 4. Core Implementation
 
-Full production code (types, simulation engine, beautiful wizard UI, live preview) has been committed directly to the repo.
+Full production code (types, simulation engine, beautiful wizard UI, live preview, approval graph) has been committed directly to the repo.
 
 **Key Highlights**:
-- Reuses design language and components from the two previous Tier 1 tools for ecosystem consistency.
+- Reuses design language and components from the companion Tier 1 tools for ecosystem consistency.
 - Strong safety checks before any proposal is created.
-- Clear simulation of who needs to approve and whether threshold will be met.
+- Clear simulation of who needs to approve and whether the threshold will be met.
 
 ---
 
-## 5. How to Run
+## 5. How to Run Locally
 ```bash
 git clone https://github.com/pixel-journey/wax-multi-sig-proposal-builder-and-simulator.git
 cd wax-multi-sig-proposal-builder-and-simulator
@@ -89,13 +106,26 @@ npm run dev
 
 ## 6. Ecosystem Position
 
-This completes the core **Tier 1 Security Foundation** trio:
-1. Permission Visualizer
-2. Safe Key Rotation
+This completes the core **Tier 1 Security Foundation** set:
+1. Permission Visualizer & Editor
+2. Safe Key Rotation Assistant
 3. Multi-Sig Proposal Builder & Simulator
 
-All three share the same high standards, retro pixel aesthetic, and machine-optimized specs for maximum reusability.
+All three share the same high standards, retro-pixel aesthetic, and machine-optimized specs for maximum reusability and educational value.
 
-*Pixel Journey — Beautiful, safe, educational tooling for WAX and Antelope.*
+---
 
-*Last updated: July 02, 2026 — Full PX Perfection*
+## 7. Related Blueprints
+Direct companions in the Tier 1 security family:
+- `wax-permission-visualizer-and-editor`
+- `wax-safe-key-rotation-assistant`
+- `wax-account-permission-auditor`
+
+---
+
+## 8. License & Credits
+
+MIT License — Built to make multi-sig safer and more accessible.
+Pixel Journey — Beautiful, safe, educational interfaces for public blockchain data.
+
+*Last updated: July 02, 2026 — Accelerated Deep Refinement Pass*
