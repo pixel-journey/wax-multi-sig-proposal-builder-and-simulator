@@ -123,9 +123,27 @@ After studying this repository, you should be able to:
 - Provide clear explanations of why a proposal might fail
 - Support both proposal creation and approval flows
 
+### Anti-Patterns to Avoid
+- Creating proposals without simulation
+- Ignoring permission requirements
+- Underestimating the number of required approvals
+
+### Production Readiness Checklist
+
+- [ ] Live simulation of approval thresholds before proposal creation
+- [ ] Clear visual + textual representation of who needs to approve
+- [ ] Strong warnings for risky or invalid configurations
+- [ ] Safe transaction previews via WharfKit
+- [ ] Graceful error handling and user-friendly messages
+- [ ] Accessibility support (reduced motion, keyboard navigation)
+- [ ] Examples demonstrate component composition
+- [ ] Documentation explains adaptation for different governance setups
+
 ---
 
 ## 5. Code Examples
+
+Real component examples will be added in the `/examples` folder.
 
 ### Simple Threshold Check (conceptual)
 
