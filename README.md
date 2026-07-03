@@ -33,6 +33,17 @@ We build this for long-term participants who want their multi-sig governance to 
 
 ---
 
+## Examples Folder
+
+This repository includes a dedicated `/examples` folder with production-ready components:
+
+- `ThresholdSimulator.tsx` — Live threshold calculation and progress
+- `ApprovalGraph.tsx` — Visual representation of required approvals
+
+More components (ProposalBuilder, RiskAnalysis, ExecutionPanel) will be added.
+
+---
+
 ## 1. Educational Core — Why Multi-Sig Proposal Tooling Matters
 
 Multi-sig proposal creation is complex and risky. This tool makes it visual and safe.
@@ -143,17 +154,10 @@ After studying this repository, you should be able to:
 
 ## 5. Code Examples
 
-Real component examples will be added in the `/examples` folder.
+Real component examples are available in the `/examples` folder:
 
-### Simple Threshold Check (conceptual)
-
-```ts
-// Simple threshold simulation
-function canExecute(threshold: number, approvals: any[]) {
-  const totalWeight = approvals.reduce((sum, a) => sum + a.weight, 0);
-  return totalWeight >= threshold;
-}
-```
+- `ThresholdSimulator.tsx` — Live threshold calculation and progress
+- `ApprovalGraph.tsx` — Visual representation of required approvals
 
 ---
 
