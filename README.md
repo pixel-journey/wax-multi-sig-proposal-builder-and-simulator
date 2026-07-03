@@ -41,6 +41,7 @@ This repository includes a dedicated `/examples` folder with production-ready co
 - `ApprovalGraph.tsx` — Visual representation of required approvals
 - `RiskAnalysisPanel.tsx` — Risk warnings and analysis
 - `ProposalBuilder.tsx` — Basic proposal creation form
+- `ExecutionPanel.tsx` — Execution controls with WharfKit integration
 - `demo.tsx` — Full composition example
 - `types.ts` — Shared types for consistency
 
@@ -162,6 +163,7 @@ Real component examples are available in the `/examples` folder:
 - `ApprovalGraph.tsx` — Visual representation of required approvals
 - `RiskAnalysisPanel.tsx` — Risk warnings and analysis
 - `ProposalBuilder.tsx` — Basic proposal creation form
+- `ExecutionPanel.tsx` — Execution controls with WharfKit integration
 - `demo.tsx` — Full composition example
 - `types.ts` — Shared types for consistency
 
