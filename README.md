@@ -40,10 +40,9 @@ This repository includes a dedicated `/examples` folder with production-ready co
 - `ThresholdSimulator.tsx` — Live threshold calculation and progress
 - `ApprovalGraph.tsx` — Visual representation of required approvals
 - `RiskAnalysisPanel.tsx` — Risk warnings and analysis
+- `ProposalBuilder.tsx` — Basic proposal creation form
 - `demo.tsx` — Full composition example
 - `types.ts` — Shared types for consistency
-
-More components (ProposalBuilder, ExecutionPanel) will be added.
 
 ---
 
@@ -162,6 +161,7 @@ Real component examples are available in the `/examples` folder:
 - `ThresholdSimulator.tsx` — Live threshold calculation and progress
 - `ApprovalGraph.tsx` — Visual representation of required approvals
 - `RiskAnalysisPanel.tsx` — Risk warnings and analysis
+- `ProposalBuilder.tsx` — Basic proposal creation form
 - `demo.tsx` — Full composition example
 - `types.ts` — Shared types for consistency
 
