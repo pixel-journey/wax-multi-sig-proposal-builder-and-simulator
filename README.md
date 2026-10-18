@@ -1,5 +1,8 @@
 # wax-multi-sig-proposal-builder-and-simulator
 
+> **Trust Label:** `educational-reference`  
+> **Verification:** See [VERIFICATION-LOG.md](VERIFICATION-LOG.md) for honest status of all claims (currently UNTESTED).
+
 > **Status:** 🔄 Deep Refinement (PX Perfection Standard)  
 > **Category:** Security & Multi-Sig (Core Antelope/WAX)  
 > **Parent Catalog:** [wax-ecosystem-blueprint-catalog](https://github.com/pixel-journey/wax-ecosystem-blueprint-catalog)  
