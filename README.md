@@ -1,206 +1,110 @@
-# wax-multi-sig-proposal-builder-and-simulator — Multi-Sig Proposal Builder & Simulator
+# wax-multi-sig-proposal-builder-and-simulator
 
-> **Status:** 🔄 In Active Development (Pixel Journey Standard)  
+> **Status:** 🔄 Deep Refinement (PX Perfection Standard)  
 > **Category:** Security & Multi-Sig (Core Antelope/WAX)  
-> **Parent Catalog:** [wax-ecosystem-blueprint-catalog](https://github.com/pixel-journey/wax-ecosystem-blueprint-catalog)
+> **Parent Catalog:** [wax-ecosystem-blueprint-catalog](https://github.com/pixel-journey/wax-ecosystem-blueprint-catalog)  
+> **Resilience:** [ECOSYSTEM-RESILIENCE.md](https://github.com/pixel-journey/wax-ecosystem-blueprint-catalog/blob/main/ECOSYSTEM-RESILIENCE.md)
 
-**Goal:** Provide a high-quality, educational, and practical reference for building and simulating safe `eosio.msig` proposals on WAX/Antelope. Visual approval graphs, live threshold math, risk analysis, and direct WharfKit execution — all client-side.
+**Goal:** Educational, production-minded reference for building and **simulating** safe multi-sig proposals (`eosio.msig`-style) on WAX/Antelope — threshold math, approval graphs, risk analysis, and gated execution patterns.
 
-This tool helps teams and DAOs create multi-sig proposals confidently and safely.
-
----
-
-## Vision & Long-Term Participation Mindset
-
-Multi-sig is one of the most powerful security features on WAX/Antelope, but creating proposals is often error-prone. Many teams lose time or funds due to misconfigured proposals or misunderstanding of requirements.
-
-This blueprint makes multi-sig proposal creation visual, educational, and significantly safer — helping teams govern with confidence.
-
-We build this for long-term participants who want their multi-sig governance to be reliable and transparent.
+When vendor frontends disappear, **multi-sig + published action recipes** are how treasuries and DAOs keep moving without trusting a single domain.
 
 ---
 
-## Quick Start
+## Vision
 
-**For Human Developers**
-1. Read the Educational Core and Architecture sections.
-2. Use the builder and simulator to create and test proposals.
-3. Review the Integration Guide for embedding these patterns.
+Multi-sig is powerful and easy to misconfigure. Stuck proposals, single-key “multi-sig,” and impossible thresholds burn time and trust.
 
-**For AI Agents & AI-Assisted Development**
-- Start with `spec.yaml` for structured machine instructions.
-- Use the simulation and safety patterns as high-quality context.
+This blueprint prioritizes:
 
----
-
-## Examples Folder
-
-This repository includes a dedicated `/examples` folder with production-ready components:
-
-- `ThresholdSimulator.tsx` — Live threshold calculation and progress
-- `ApprovalGraph.tsx` — Visual representation of required approvals
-- `RiskAnalysisPanel.tsx` — Risk warnings and analysis
-- `ProposalBuilder.tsx` — Basic proposal creation form
-- `ExecutionPanel.tsx` — Execution controls with WharfKit integration
-- `demo.tsx` — Full composition example
-- `types.ts` — Shared types for consistency
+- **Pure threshold math** before any broadcast
+- **Cited risks** (impossible threshold, single approver, one-key threshold)
+- **Visual + textual** approval state
+- **Execution as a separate, confirmed step** — not one-click from a monitoring screen
 
 ---
 
-## 1. Educational Core — Why Multi-Sig Proposal Tooling Matters
+## Quick Starts
 
-Multi-sig proposal creation is complex and risky. This tool makes it visual and safe.
+### Humans
+1. Read threshold vs total weight in §1.
+2. Use `/examples` — `engines.ts`, simulator, graph, risks, builder, execution panel.
+3. Pair with `wax-permission-visualizer-and-editor` for account authority design.
 
-### Key Concepts
-
-| Concept                        | Description                                              | Why It Matters                              |
-|--------------------------------|----------------------------------------------------------|---------------------------------------------|
-| eosio.msig Flow                | propose → approve → execute                              | Core governance mechanism                   |
-| Threshold vs Weight Math       | Real-time calculation of required approvals              | Prevents failed or stuck proposals          |
-| Permission Requirements        | Using the correct permission when proposing              | Critical for validity and security          |
-| Risk Analysis                  | Identifying insufficient approvals or dangerous setups   | Protects funds and governance               |
-
-### Common Mistakes This Tool Helps Prevent
-
-| Mistake                              | Consequence                        | How This Tool Helps                              |
-|--------------------------------------|------------------------------------|--------------------------------------------------|
-| Proposing with wrong permission      | Proposal fails or is invalid       | Clear permission selection + validation          |
-| Insufficient approvals planned       | Proposal gets stuck                | Live simulation of required approvals            |
-| Wrong threshold calculation          | Failed execution                   | Real-time threshold math with warnings           |
-| Not understanding who can approve    | Governance confusion               | Visual approval graph + permission analysis      |
-
-### Learning Outcomes
-
-After studying this repository, you should be able to:
-- Confidently create and simulate multi-sig proposals
-- Understand threshold math and approval requirements
-- Identify risks before broadcasting
-- Build or integrate multi-sig tooling into your own applications
+### AI agents
+1. Load `spec.yaml`.
+2. Use `computeThresholdSnapshot` and `analyzeProposalRisks` from `examples/engines.ts`.
+3. Never invent permission structures; verify on explorer.
 
 ---
 
-## 2. Architecture & Design Decisions
+## 1. Educational Core
 
-### Recommended Tech Stack
+| Concept | Why it matters |
+|---------|----------------|
+| **propose → approve → execute** | Native msig lifecycle |
+| **Threshold vs total weight** | Impossible configs fail forever |
+| **Weight concentration** | One signer meeting threshold ≠ multi-party security |
+| **Stuck proposals** | No remaining approvers below threshold |
 
-- **Framework**: Next.js 15 + TypeScript (strict)
-- **UI**: Tailwind + shadcn/ui + framer-motion
-- **State**: Zustand
-- **Simulation**: Pure client-side JavaScript + permission engine
-- **Signing**: WharfKit
-- **Design System**: Pixel Journey Design System
+### Common mistakes
 
-### Core Component Architecture
+| Mistake | Tool response |
+|---------|----------------|
+| Threshold > sum of weights | High risk: impossible |
+| Single approver | High risk: not resilient |
+| One weight ≥ threshold | Medium risk: false multi-sig |
+| Execute without simulation | Anti-pattern — always simulate first |
+
+---
+
+## 2. Architecture
 
 ```
-/components/
-  ProposalBuilder.tsx
-  ThresholdSimulator.tsx
-  ApprovalGraph.tsx
-  RiskAnalysisPanel.tsx
-  ExecutionPanel.tsx
+ProposalConfig
+  → engines (computeThresholdSnapshot, analyzeProposalRisks)
+  → ThresholdSimulator / ApprovalGraph / RiskAnalysisPanel
+  → ProposalBuilder / ExecutionPanel (WharfKit, gated)
 ```
 
-### Key Design Decisions
-
-- Strong safety checks and live simulation before any proposal is created
-- Clear visual approval graphs
-- Real-time threshold math with warnings
-- Reuses patterns from companion Tier 1 security tools
-- Client-side simulation for instant, free feedback
+Pure engines live in `examples/engines.ts`. UI components consume snapshots only.
 
 ---
 
-## 3. Integration Guide
+## 3. Integration levels
 
-### How to Integrate This Pattern
-
-1. Implement proposal builder with live simulation
-2. Add clear approval visualization and threshold math
-3. Include risk analysis and safety warnings
-4. Connect to WharfKit for safe proposal creation and execution
-
-### Integration Levels
-
-- **Minimal**: Basic proposal form + simple simulation
-- **Recommended**: Full builder + visual graphs + risk analysis + WharfKit integration
-- **Advanced**: Advanced simulation, batch proposals, governance analytics
+| Level | Scope |
+|-------|--------|
+| **Minimal** | Threshold snapshot + risk list |
+| **Recommended** | Builder + graph + risks + confirmed execute |
+| **Advanced** | Live account permission import, batch proposes |
 
 ---
 
-## 4. Best Practices
+## 4. Best practices
 
-- Always simulate before broadcasting
-- Clearly show who needs to approve and whether the threshold will be met
-- Use strong warnings for risky configurations
-- Make permission selection explicit and validated
-- Provide clear explanations of why a proposal might fail
-- Support both proposal creation and approval flows
+**Do** simulate; show remaining weight; keep proposal text/actions in git as well as UI.  
+**Don’t** treat a green progress bar as permission to skip ABI review.
 
-### Anti-Patterns to Avoid
-- Creating proposals without simulation
-- Ignoring permission requirements
-- Underestimating the number of required approvals
-
-### Production Readiness Checklist
-
-- [ ] Live simulation of approval thresholds before proposal creation
-- [ ] Clear visual + textual representation of who needs to approve
-- [ ] Strong warnings for risky or invalid configurations
-- [ ] Safe transaction previews via WharfKit
-- [ ] Graceful error handling and user-friendly messages
-- [ ] Accessibility support (reduced motion, keyboard navigation)
-- [ ] Examples demonstrate component composition
-- [ ] Documentation explains adaptation for different governance setups
+See catalog **ECOSYSTEM-RESILIENCE.md** — multi-sig is the durable path when SaaS frontends die.
 
 ---
 
-## 5. Code Examples
+## 5. Ecosystem position
 
-Real component examples are available in the `/examples` folder:
+Tier-1 security companion to:
 
-- `ThresholdSimulator.tsx` — Live threshold calculation and progress
-- `ApprovalGraph.tsx` — Visual representation of required approvals
-- `RiskAnalysisPanel.tsx` — Risk warnings and analysis
-- `ProposalBuilder.tsx` — Basic proposal creation form
-- `ExecutionPanel.tsx` — Execution controls with WharfKit integration
-- `demo.tsx` — Full composition example
-- `types.ts` — Shared types for consistency
-
----
-
-## 6. Machine Instructions (For AI Agents)
-
-See `spec.yaml` for structured instructions.
-
-Key instructions:
-- Build multi-step proposal creator with live simulation
-- Implement approval threshold checker and risk scoring
-- Add visual approval graph using PermissionTree patterns
-- Support propose, approve, and execute flows with clear warnings
-
----
-
-## 7. Ecosystem Position
-
-This completes the core **Tier 1 Security Foundation** set alongside:
 - `wax-permission-visualizer-and-editor`
 - `wax-safe-key-rotation-assistant`
-
-All share the same high standards and machine-optimized specs.
-
-Builds on the foundational layer:
-- `pixel-journey-standards`
-- `gitbook-docs`
-- `pixel-journey-templates`
-- `wax-ecosystem-blueprint-catalog`
+- `wax-secure-key-management-and-privacy-tools`
+- DAO treasury & governance blueprints (execute after vote)
 
 ---
 
-## 8. License & Credits
+## 6. License
 
-MIT License
+MIT — **Pixel Journey**
 
-Pixel Journey — Educational, practical, and beautiful interfaces for public blockchain infrastructure.
+*Exemplifies the [PX Perfection Standard](https://github.com/pixel-journey/wax-ecosystem-blueprint-catalog/blob/main/PX-PERFECTION-STANDARD.md).*
 
-*Last updated: July 2026*
+*Last major refinement pass: October 2026*
