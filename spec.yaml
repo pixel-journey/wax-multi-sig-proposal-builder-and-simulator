@@ -3,72 +3,44 @@ blueprint:
   name: Multi-Sig Proposal Builder & Simulator
   tier: 1
   category: security-foundational
-  status: alpha-ready
-  version: 0.2
+  status: refined
+  version: "0.5.0"
+  last_refined: "2026-10-18"
 
 metadata:
   description: |
-    A powerful yet safe builder and simulator for Antelope multi-sig proposals.
-    Create, preview, validate, and simulate eosio.msig proposals with clear
-    threshold math, risk analysis, approval visualization, and direct WharfKit execution.
-  target_audience:
-    - Human developers and DAO operators managing multi-sig governance
-    - AI agents generating multi-sig proposal tools
-    - Teams building secure governance systems on WAX/Antelope
+    Safe multi-sig proposal simulation for WAX/Antelope — threshold math,
+    approval progress, structural risk analysis, and gated execution patterns.
   related_blueprints:
     - wax-permission-visualizer-and-editor
     - wax-safe-key-rotation-assistant
     - wax-secure-key-management-and-privacy-tools
+  related_docs:
+    - wax-ecosystem-blueprint-catalog/ECOSYSTEM-RESILIENCE.md
+
+invariants:
+  - Threshold math is pure and client-side
+  - Risks cite triggers
+  - Impossible thresholds are flagged high
+  - Single-approver configs are flagged high
+  - Execution remains a separate confirmed step
 
 features:
-  - visual_proposal_builder
-  - live_threshold_simulation
-  - approval_graph_visualization
-  - risk_analysis_engine
-  - eosio_msig_compatibility
-  - wharfkit_execution
-  - multiple_integration_levels
-
-integration_levels:
-  minimal:
-    description: Basic proposal form + simple simulation
-    recommended_for: Learning and quick testing
-  recommended:
-    description: Full builder + visual graphs + risk analysis + WharfKit integration
-    recommended_for: Most production and DAO use cases
-  advanced:
-    description: Advanced simulation, batch proposals, governance analytics
-    recommended_for: Complex governance or enterprise tools
+  implemented:
+    - computeThresholdSnapshot
+    - analyzeProposalRisks
+    - ThresholdSimulator, ApprovalGraph, RiskAnalysisPanel
+    - ProposalBuilder, ExecutionPanel, demo
+  planned:
+    - Live permission import from chain
+    - Batch proposal templates
 
 machine_instructions:
-  - |
-    Build multi-step proposal creator with live simulation and clear warnings.
-  - |
-    Implement approval threshold checker and risk scoring.
-  - |
-    Add visual approval graph using PermissionTree patterns.
-  - |
-    Support propose, approve, and execute flows with strong safety features.
-  - |
-    Prioritize clarity, safety, and educational value in all flows.
+  - Use examples/engines.ts for all threshold and risk logic
+  - Verify live permissions on explorer before recommending broadcast
+  - Link multi-sig as resilience path when product frontends shut down
 
 technical_requirements:
   framework: Next.js 15 + TypeScript (strict)
-  styling: Tailwind + shadcn/ui + framer-motion
-  simulation: Pure client-side JavaScript + permission engine
+  styling: Tailwind CSS
   signing: WharfKit
-  design_system: pixel-journey-design-system
-
-best_practices:
-  - Always simulate before broadcasting
-  - Clearly show who needs to approve and whether the threshold will be met
-  - Use strong warnings for risky configurations
-  - Make permission selection explicit and validated
-  - Provide clear explanations of why a proposal might fail
-  - Support both proposal creation and approval flows
-
-future_extensions:
-  - Advanced batch proposal simulation
-  - Governance analytics and history
-  - Integration with permission health dashboards
-  - Hardware wallet signing support
