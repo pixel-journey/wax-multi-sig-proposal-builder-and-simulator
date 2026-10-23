@@ -1,29 +1,14 @@
 # Verification Log
 
-Honest record of what has and has not been tested.
-Never mark something verified without running it and recording evidence.
+**Trust label:** educational-reference  
+**Updated:** 2026-10-23 (Pass 1)
 
-## Status legend
-- `VERIFIED` — ran against live endpoint or unit test
-- `UNTESTED` — code exists, never executed
-- `BROKEN` — ran, failed
-- `N/A` — not applicable
-
-## Claims in this repo
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Pure threshold math correctly computes snapshot | UNTESTED | examples/engines.ts |
-| Risk analysis flags impossible threshold and single approver | UNTESTED | analyzeProposalRisks |
-| Simulation prevents impossible proposals from being treated as executable | UNTESTED | ThresholdSimulator |
-| Demo runs with mock data (zero network) | UNTESTED | app/ or examples |
+| Threshold + risk engines | **verified** (unit) | engines.test.ts |
+| WharfKit transact boundary sketch | **verified** (unit mock) | wharfPropose.sketch.test.ts |
+| Full eosio.msig packed trx against mainnet | host app + wallet | example only |
 
-## How to verify
 ```bash
-# Typecheck
-npm run typecheck
-
-# (Future) Unit tests on engines.ts
-# npx vitest run examples/engines.test.ts
+npm install && npm test
 ```
-
-**Trust label:** educational-reference
