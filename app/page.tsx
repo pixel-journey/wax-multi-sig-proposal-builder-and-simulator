@@ -1,9 +1,14 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import {
+  buildApproveSequence,
+  sequenceSummary,
+} from '../examples/approveSequence';
 import { clearApprovals, setAllApproved } from '../examples/bulkApprovals';
 import { probeGetAccount } from '../examples/chainProbe';
 import { exportApproversCsv } from '../examples/csvExport';
+import { downloadTextFile, exportBasename } from '../examples/download';
 import {
   analyzeProposalRisks,
   computeThresholdSnapshot,
@@ -85,10 +90,20 @@ export default function MultiSigProposalBuilder() {
     [proposer, proposalName, threshold, approvals]
   );
 
+  const approveSeq = useMemo(
+    () =>
+      buildApproveSequence({
+        proposer,
+        proposalName,
+        approvals,
+      }),
+    [proposer, proposalName, approvals]
+  );
+
   const actionSketches = useMemo(() => {
     const requested = approvals.map((a) => ({
       actor: a.account,
-      permission: 'active',
+      permission: a.permission ?? 'active',
     }));
     const inner = exampleInnerTransfer({
       from: proposer,
@@ -107,15 +122,18 @@ export default function MultiSigProposalBuilder() {
       buildApproveAction({
         proposer,
         proposalName,
-        level: { actor: approvals[0].account, permission: 'active' },
+        level: {
+          actor: approvals[0].account,
+          permission: approvals[0].permission ?? 'active',
+        },
       });
     const exec = buildExecAction({
       proposer,
       proposalName,
       executer: proposer,
     });
-    return { propose, approve, exec, inner };
-  }, [approvals, proposer, proposalName, actionSummary]);
+    return { propose, approve, exec, inner, approveSequence: approveSeq };
+  }, [approvals, proposer, proposalName, actionSummary, approveSeq]);
 
   const copy = async (text: string, ok: string) => {
     try {
@@ -124,6 +142,11 @@ export default function MultiSigProposalBuilder() {
     } catch {
       setStatus('Clipboard unavailable');
     }
+  };
+
+  const dl = (filename: string, content: string, mime: string) => {
+    const r = downloadTextFile(filename, content, mime);
+    setStatus(r.ok ? `Downloaded ${filename}` : r.reason);
   };
 
   const persist = () => {
@@ -148,7 +171,10 @@ export default function MultiSigProposalBuilder() {
       setStatus('Approver already listed');
       return;
     }
-    setApprovals([...approvals, { account: a, weight: 1, hasApproved: false }]);
+    setApprovals([
+      ...approvals,
+      { account: a, weight: 1, hasApproved: false, permission: 'active' },
+    ]);
     setNewActor('');
   };
 
@@ -190,7 +216,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 7 · approvals table · richer export
+          Pass 8 · downloads · approve sequence · permission
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -236,7 +262,7 @@ export default function MultiSigProposalBuilder() {
             onClick={() => probeTable('proposal')}
             className="px-2 py-1 rounded-lg text-xs bg-sky-800 disabled:opacity-50"
           >
-            Probe proposals table
+            Probe proposals
           </button>
           <button
             type="button"
@@ -244,7 +270,7 @@ export default function MultiSigProposalBuilder() {
             onClick={() => probeTable('approvals')}
             className="px-2 py-1 rounded-lg text-xs bg-sky-700 disabled:opacity-50"
           >
-            Probe approvals table
+            Probe approvals
           </button>
         </div>
 
@@ -323,7 +349,7 @@ export default function MultiSigProposalBuilder() {
                 {approvals.map((a) => (
                   <li
                     key={a.account}
-                    className="flex items-center gap-2 bg-black/40 px-3 py-2 rounded-lg text-sm font-mono"
+                    className="flex flex-wrap items-center gap-2 bg-black/40 px-3 py-2 rounded-lg text-sm font-mono"
                   >
                     <button
                       type="button"
@@ -336,8 +362,9 @@ export default function MultiSigProposalBuilder() {
                     >
                       {a.hasApproved ? '✓' : '○'}
                     </button>
-                    <span className="flex-1">{a.account}</span>
+                    <span className="flex-1 min-w-[6rem]">{a.account}</span>
                     <input
+                      title="weight"
                       type="number"
                       min={1}
                       value={a.weight}
@@ -350,7 +377,21 @@ export default function MultiSigProposalBuilder() {
                           )
                         )
                       }
-                      className="w-14 bg-black/60 border border-white/10 rounded px-1 py-0.5"
+                      className="w-12 bg-black/60 border border-white/10 rounded px-1 py-0.5"
+                    />
+                    <input
+                      title="permission"
+                      value={a.permission ?? 'active'}
+                      onChange={(e) =>
+                        setApprovals(
+                          approvals.map((x) =>
+                            x.account === a.account
+                              ? { ...x, permission: e.target.value }
+                              : x
+                          )
+                        )
+                      }
+                      className="w-16 bg-black/60 border border-white/10 rounded px-1 py-0.5 text-[10px]"
                     />
                     <button
                       type="button"
@@ -440,6 +481,12 @@ export default function MultiSigProposalBuilder() {
                 </li>
               ))}
             </ul>
+            {approveSeq.length > 0 && (
+              <pre className="text-[10px] opacity-60 whitespace-pre-wrap">
+                Approve sequence (simulated checks):\n
+                {sequenceSummary(approveSeq)}
+              </pre>
+            )}
             <div className="flex flex-wrap gap-2 pt-2">
               <button
                 type="button"
@@ -449,16 +496,16 @@ export default function MultiSigProposalBuilder() {
                     'Markdown plan copied'
                   )
                 }
-                className="px-4 py-2 rounded-xl bg-emerald-800 text-sm"
+                className="px-3 py-2 rounded-xl bg-emerald-800 text-sm"
               >
-                Copy MD plan
+                Copy MD
               </button>
               <button
                 type="button"
                 onClick={() =>
-                  copy(exportProposalJson(config, proposer), 'JSON plan copied')
+                  copy(exportProposalJson(config, proposer), 'JSON copied')
                 }
-                className="px-4 py-2 rounded-xl bg-sky-900 text-sm"
+                className="px-3 py-2 rounded-xl bg-sky-900 text-sm"
               >
                 Copy JSON
               </button>
@@ -467,7 +514,7 @@ export default function MultiSigProposalBuilder() {
                 onClick={() =>
                   copy(exportApproversCsv(config, proposer), 'CSV copied')
                 }
-                className="px-4 py-2 rounded-xl bg-teal-800 text-sm"
+                className="px-3 py-2 rounded-xl bg-teal-800 text-sm"
               >
                 Copy CSV
               </button>
@@ -476,12 +523,42 @@ export default function MultiSigProposalBuilder() {
                 onClick={() =>
                   copy(
                     JSON.stringify(actionSketches, null, 2),
-                    'msig action sketches copied'
+                    'msig actions copied'
                   )
                 }
-                className="px-4 py-2 rounded-xl bg-indigo-900 text-sm"
+                className="px-3 py-2 rounded-xl bg-indigo-900 text-sm"
               >
                 Copy msig actions
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const b = exportBasename();
+                  dl(`${b}.md`, exportProposalMarkdown(config, proposer), 'text/markdown');
+                }}
+                className="px-3 py-2 rounded-xl bg-indigo-800 text-sm"
+              >
+                Download MD
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const b = exportBasename();
+                  dl(`${b}.json`, exportProposalJson(config, proposer), 'application/json');
+                }}
+                className="px-3 py-2 rounded-xl bg-indigo-700 text-sm"
+              >
+                Download JSON
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const b = exportBasename();
+                  dl(`${b}.csv`, exportApproversCsv(config, proposer), 'text/csv');
+                }}
+                className="px-3 py-2 rounded-xl bg-indigo-600 text-sm"
+              >
+                Download CSV
               </button>
             </div>
             {tableRows && (
@@ -494,9 +571,6 @@ export default function MultiSigProposalBuilder() {
                 </pre>
               </details>
             )}
-            <p className="text-[10px] opacity-50">
-              Live path: see WHARFKIT.md · host + session.transact
-            </p>
           </div>
         </div>
 

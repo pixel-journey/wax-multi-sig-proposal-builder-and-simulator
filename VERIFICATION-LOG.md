@@ -1,14 +1,16 @@
 # Verification Log
 
 **Trust label:** educational-reference  
-**Updated:** 2026-10-25 (Pass 7)
+**Updated:** 2026-10-25 (Pass 8)
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Pass 1–6 suite | unit | prior |
-| Richer export (risk + validation) | **verified** | exportPlan.test.ts |
-| Approvals table probe UI | soft-fail live | optional |
+| Pass 1–7 | unit + UI | prior |
+| download basename | **verified** | download.test.ts |
+| approve sequence | **verified** | approveSequence.test.ts |
 | Live msig broadcast | host + WharfKit | WHARFKIT.md |
+
+Clipboard **and** download both available — nothing removed.
 
 ```bash
 npm install && npm test

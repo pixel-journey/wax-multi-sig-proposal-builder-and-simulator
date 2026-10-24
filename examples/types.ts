@@ -6,6 +6,8 @@ export interface Approval {
   account: string;
   weight: number;
   hasApproved?: boolean;
+  /** Permission used in approve level — default active */
+  permission?: string;
 }
 
 export type RiskLevel = "low" | "medium" | "high";
