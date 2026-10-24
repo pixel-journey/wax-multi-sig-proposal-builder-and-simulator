@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { probeGetAccount } from '../examples/chainProbe';
+import { exportApproversCsv } from '../examples/csvExport';
 import {
   analyzeProposalRisks,
   computeThresholdSnapshot,
@@ -17,6 +18,10 @@ import {
   buildProposeAction,
   exampleInnerTransfer,
 } from '../examples/msigActions';
+import {
+  fetchTableRows,
+  proposalsByProposerRequest,
+} from '../examples/msigTableProbe';
 import { PRESETS } from '../examples/presets';
 import { clearDraft, loadDraft, saveDraft } from '../examples/storage';
 import type { Approval, ProposalConfig } from '../examples/types';
@@ -36,6 +41,7 @@ export default function MultiSigProposalBuilder() {
   const [status, setStatus] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [probing, setProbing] = useState(false);
+  const [tableRows, setTableRows] = useState<unknown[] | null>(null);
 
   useEffect(() => {
     const d = loadDraft();
@@ -152,6 +158,20 @@ export default function MultiSigProposalBuilder() {
     );
   };
 
+  const probeProposals = async () => {
+    setProbing(true);
+    const req = proposalsByProposerRequest(proposer.trim());
+    const r = await fetchTableRows(req);
+    setProbing(false);
+    if (!r.ok) {
+      setTableRows(null);
+      setStatus(`Table probe soft-fail: ${r.reason}`);
+      return;
+    }
+    setTableRows(r.rows);
+    setStatus(`eosio.msig::proposal rows: ${r.rows.length}${r.more ? ' (more)' : ''}`);
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
@@ -159,7 +179,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 4 · validation · chain probe
+          Pass 5 · table probe · CSV
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -197,7 +217,15 @@ export default function MultiSigProposalBuilder() {
             onClick={probeProposer}
             className="px-2 py-1 rounded-lg text-xs bg-sky-900 disabled:opacity-50"
           >
-            {probing ? 'Probing…' : 'Probe proposer get_account'}
+            {probing ? 'Probing…' : 'Probe get_account'}
+          </button>
+          <button
+            type="button"
+            disabled={probing}
+            onClick={probeProposals}
+            className="px-2 py-1 rounded-lg text-xs bg-sky-800 disabled:opacity-50"
+          >
+            Probe msig proposals table
           </button>
         </div>
 
@@ -389,6 +417,18 @@ export default function MultiSigProposalBuilder() {
                 type="button"
                 onClick={() =>
                   copy(
+                    exportApproversCsv(config, proposer),
+                    'CSV copied'
+                  )
+                }
+                className="px-4 py-2 rounded-xl bg-teal-800 text-sm"
+              >
+                Copy CSV
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  copy(
                     JSON.stringify(actionSketches, null, 2),
                     'msig action sketches copied'
                   )
@@ -398,6 +438,14 @@ export default function MultiSigProposalBuilder() {
                 Copy msig actions
               </button>
             </div>
+            {tableRows && (
+              <details className="text-[10px] opacity-60" open>
+                <summary>On-chain proposal rows ({tableRows.length})</summary>
+                <pre className="overflow-x-auto mt-2 max-h-40">
+                  {JSON.stringify(tableRows, null, 2)}
+                </pre>
+              </details>
+            )}
             <details className="text-[10px] opacity-50">
               <summary>propose / approve / exec sketches</summary>
               <pre className="overflow-x-auto mt-2 max-h-48">
