@@ -1,16 +1,13 @@
 # Verification Log
 
 **Trust label:** educational-reference  
-**Updated:** 2026-10-25 (Pass 9)
+**Updated:** 2026-10-25 (Pass 10)
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Pass 1–8 | unit + UI | prior |
-| undo stack | **verified** | undo.test.ts |
-| force-all sequence | UI + prior unit | approveSequence |
+| Pass 1–9 suite | unit + UI | prior |
+| normalizeProposalRows | **verified** | proposalRows.test.ts |
 | Live msig broadcast | host + WharfKit | WHARFKIT.md |
-
-Features only added — clipboard, downloads, undo all present.
 
 ```bash
 npm install && npm test
