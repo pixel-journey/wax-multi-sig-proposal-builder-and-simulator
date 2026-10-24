@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { clearApprovals, setAllApproved } from '../examples/bulkApprovals';
 import { probeGetAccount } from '../examples/chainProbe';
 import { exportApproversCsv } from '../examples/csvExport';
 import {
@@ -23,6 +24,7 @@ import {
   proposalsByProposerRequest,
 } from '../examples/msigTableProbe';
 import { PRESETS } from '../examples/presets';
+import { aggregateRiskScore } from '../examples/riskScore';
 import { clearDraft, loadDraft, saveDraft } from '../examples/storage';
 import type { Approval, ProposalConfig } from '../examples/types';
 import { validateDraft } from '../examples/validate';
@@ -69,6 +71,7 @@ export default function MultiSigProposalBuilder() {
 
   const snap = useMemo(() => computeThresholdSnapshot(config), [config]);
   const risks = useMemo(() => analyzeProposalRisks(config), [config]);
+  const riskAgg = useMemo(() => aggregateRiskScore(risks), [risks]);
   const issues = useMemo(
     () =>
       validateDraft({
@@ -169,7 +172,9 @@ export default function MultiSigProposalBuilder() {
       return;
     }
     setTableRows(r.rows);
-    setStatus(`eosio.msig::proposal rows: ${r.rows.length}${r.more ? ' (more)' : ''}`);
+    setStatus(
+      `eosio.msig::proposal rows: ${r.rows.length}${r.more ? ' (more)' : ''}`
+    );
   };
 
   return (
@@ -179,7 +184,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 5 · table probe · CSV
+          Pass 6 · bulk approvals · risk score · WharfKit doc
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -225,7 +230,7 @@ export default function MultiSigProposalBuilder() {
             onClick={probeProposals}
             className="px-2 py-1 rounded-lg text-xs bg-sky-800 disabled:opacity-50"
           >
-            Probe msig proposals table
+            Probe msig proposals
           </button>
         </div>
 
@@ -283,7 +288,23 @@ export default function MultiSigProposalBuilder() {
             </label>
 
             <div>
-              <div className="text-xs opacity-70 mb-2">Approvers (toggle = approved)</div>
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span className="text-xs opacity-70">Approvers</span>
+                <button
+                  type="button"
+                  className="text-[10px] underline opacity-60"
+                  onClick={() => setApprovals(setAllApproved(approvals, true))}
+                >
+                  approve all
+                </button>
+                <button
+                  type="button"
+                  className="text-[10px] underline opacity-60"
+                  onClick={() => setApprovals(clearApprovals(approvals))}
+                >
+                  clear all
+                </button>
+              </div>
               <ul className="space-y-2">
                 {approvals.map((a) => (
                   <li
@@ -359,6 +380,20 @@ export default function MultiSigProposalBuilder() {
               </div>
               <div>Total weight: {snap.totalWeight}</div>
               <div>
+                Risk score:{' '}
+                <span
+                  className={
+                    riskAgg.label === 'critical' || riskAgg.label === 'high'
+                      ? 'text-red-400'
+                      : riskAgg.label === 'moderate'
+                        ? 'text-amber-400'
+                        : 'text-emerald-400'
+                  }
+                >
+                  {riskAgg.score} ({riskAgg.label})
+                </span>
+              </div>
+              <div>
                 Threshold met:{' '}
                 <span
                   className={
@@ -416,10 +451,7 @@ export default function MultiSigProposalBuilder() {
               <button
                 type="button"
                 onClick={() =>
-                  copy(
-                    exportApproversCsv(config, proposer),
-                    'CSV copied'
-                  )
+                  copy(exportApproversCsv(config, proposer), 'CSV copied')
                 }
                 className="px-4 py-2 rounded-xl bg-teal-800 text-sm"
               >
@@ -446,12 +478,17 @@ export default function MultiSigProposalBuilder() {
                 </pre>
               </details>
             )}
-            <details className="text-[10px] opacity-50">
-              <summary>propose / approve / exec sketches</summary>
-              <pre className="overflow-x-auto mt-2 max-h-48">
-                {JSON.stringify(actionSketches, null, 2)}
-              </pre>
-            </details>
+            <p className="text-[10px] opacity-50">
+              Live path: see{' '}
+              <a
+                className="underline text-emerald-400"
+                href="https://github.com/pixel-journey/wax-multi-sig-proposal-builder-and-simulator/blob/main/WHARFKIT.md"
+                target="_blank"
+                rel="noreferrer"
+              >
+                WHARFKIT.md
+              </a>
+            </p>
           </div>
         </div>
 
