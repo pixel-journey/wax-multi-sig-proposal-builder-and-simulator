@@ -290,7 +290,8 @@ export default function MultiSigProposalBuilder() {
                       className="w-14 bg-black/60 border border-white/10 rounded px-1 py-0.5"
                     />
                     <button
-                      type="button"ians className="text-red-400 text-xs"
+                      type="button"
+                      className="text-red-400 text-xs"
                       onClick={() =>
                         setApprovals(
                           approvals.filter((x) => x.account !== a.account)
