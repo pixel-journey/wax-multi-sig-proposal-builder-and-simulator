@@ -9,6 +9,7 @@ import {
 export function TableRowsPanel(props: {
   label: string;
   rows: unknown[] | null;
+  onPickProposalName?: (name: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const normalized = useMemo(
@@ -41,7 +42,13 @@ export function TableRowsPanel(props: {
         <ul className="mt-2 space-y-1 font-mono">
           {filtered.map((r) => (
             <li key={r.proposalName} className="border-b border-white/5 py-1">
-              <span className="text-emerald-400">{r.proposalName}</span>
+              <button
+                type="button"
+                className="text-emerald-400 underline"
+                onClick={() => props.onPickProposalName?.(r.proposalName)}
+              >
+                {r.proposalName}
+              </button>
               {r.packedTransaction && (
                 <span className="opacity-40 ml-2">
                   packed {r.packedTransaction.slice(0, 16)}…
