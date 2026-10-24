@@ -1,15 +1,18 @@
 /** Soft-fail chain reads — never throws to callers. */
 
+import { DEFAULT_RPC, normalizeRpcBase } from "./rpcEndpoints";
+
 export type ProbeResult =
   | { ok: true; account: string; created?: string; raw?: unknown }
   | { ok: false; reason: string };
 
 export async function probeGetAccount(
   account: string,
-  rpcBase = "https://wax.greymass.com"
+  rpcBase: string = DEFAULT_RPC
 ): Promise<ProbeResult> {
   try {
-    const res = await fetch(`${rpcBase.replace(/\/$/, "")}/v1/chain/get_account`, {
+    const base = normalizeRpcBase(rpcBase);
+    const res = await fetch(`${base}/v1/chain/get_account`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ account_name: account }),

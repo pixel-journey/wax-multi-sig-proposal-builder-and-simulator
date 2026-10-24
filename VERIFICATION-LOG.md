@@ -1,13 +1,13 @@
 # Verification Log
 
 **Trust label:** educational-reference  
-**Updated:** 2026-10-25 (Pass 12)
+**Updated:** 2026-10-25 (Pass 13)
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Pass 1–11 | unit + UI | prior |
-| importDraftJson | **verified** | importDraft.test.ts |
-| Pick name from table row | UI | TableRowsPanel |
+| Pass 1–12 | unit + UI | prior |
+| RPC presets / normalize | **verified** | rpcEndpoints.test.ts |
+| lifecycle sketch | **verified** | lifecycleSequence.test.ts |
 | Live msig broadcast | host + WharfKit | WHARFKIT.md |
 
 ```bash

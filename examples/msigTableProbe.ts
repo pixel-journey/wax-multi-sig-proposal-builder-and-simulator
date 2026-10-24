@@ -1,7 +1,8 @@
 /**
  * Soft-fail reads of eosio.msig tables (proposal / approvals).
- * Host can use these request shapes or call fetch directly.
  */
+
+import { DEFAULT_RPC, normalizeRpcBase } from "./rpcEndpoints";
 
 export type HttpRequest = {
   method: "POST";
@@ -19,7 +20,7 @@ export function getTableRowsRequest(
 ): HttpRequest {
   return {
     method: "POST",
-    url: `${rpcBase.replace(/\/$/, "")}/v1/chain/get_table_rows`,
+    url: `${normalizeRpcBase(rpcBase)}/v1/chain/get_table_rows`,
     body: {
       json: true,
       code,
@@ -31,18 +32,16 @@ export function getTableRowsRequest(
   };
 }
 
-/** Proposals scoped by proposer account */
 export function proposalsByProposerRequest(
   proposer: string,
-  rpcBase = "https://wax.greymass.com"
+  rpcBase = DEFAULT_RPC
 ): HttpRequest {
   return getTableRowsRequest(rpcBase, "eosio.msig", proposer, "proposal", 50);
 }
 
-/** Approvals table often scoped by proposer */
 export function approvalsByProposerRequest(
   proposer: string,
-  rpcBase = "https://wax.greymass.com"
+  rpcBase = DEFAULT_RPC
 ): HttpRequest {
   return getTableRowsRequest(rpcBase, "eosio.msig", proposer, "approvals", 50);
 }
