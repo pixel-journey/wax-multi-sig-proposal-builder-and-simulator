@@ -32,6 +32,7 @@ import {
 } from '../examples/msigTableProbe';
 import { PRESETS } from '../examples/presets';
 import { aggregateRiskScore } from '../examples/riskScore';
+import { DEFAULT_RPC, RPC_PRESETS, normalizeRpcBase } from '../examples/rpcEndpoints';
 import { clearDraft, loadDraft, saveDraft } from '../examples/storage';
 import { TableRowsPanel } from '../examples/TableRowsPanel';
 import type { Approval, ProposalConfig } from '../examples/types';
@@ -63,6 +64,7 @@ export default function MultiSigProposalBuilder() {
   const [undo, setUndo] = useState<UndoStack>(() => emptyUndo());
   const [seqMode, setSeqMode] = useState<'checked' | 'all'>('checked');
   const [importText, setImportText] = useState('');
+  const [rpcBase, setRpcBase] = useState(DEFAULT_RPC);
 
   useEffect(() => {
     const d = loadDraft();
@@ -225,7 +227,7 @@ export default function MultiSigProposalBuilder() {
 
   const probeProposer = async () => {
     setProbing(true);
-    const r = await probeGetAccount(proposer.trim());
+    const r = await probeGetAccount(proposer.trim(), rpcBase);
     setProbing(false);
     setStatus(
       r.ok
@@ -238,8 +240,8 @@ export default function MultiSigProposalBuilder() {
     setProbing(true);
     const req =
       kind === 'proposal'
-        ? proposalsByProposerRequest(proposer.trim())
-        : approvalsByProposerRequest(proposer.trim());
+        ? proposalsByProposerRequest(proposer.trim(), rpcBase)
+        : approvalsByProposerRequest(proposer.trim(), rpcBase);
     const r = await fetchTableRows(req);
     setProbing(false);
     if (!r.ok) {
@@ -261,7 +263,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 12 · import draft · pick proposal name
+          Pass 13 · RPC presets · lifecycle helpers
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -325,6 +327,28 @@ export default function MultiSigProposalBuilder() {
           >
             Probe approvals
           </button>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-4 items-center text-[10px]">
+          <span className="opacity-50">RPC</span>
+          {RPC_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              className={`px-2 py-1 rounded-lg ${
+                normalizeRpcBase(rpcBase) === normalizeRpcBase(p.url)
+                  ? 'bg-emerald-800'
+                  : 'bg-white/10'
+              }`}
+              onClick={() => setRpcBase(p.url)}
+            >
+              {p.label}
+            </button>
+          ))}
+          <input
+            value={rpcBase}
+            onChange={(e) => setRpcBase(e.target.value)}
+            className="flex-1 min-w-[12rem] bg-black/60 border border-white/10 rounded px-2 py-1 font-mono"
+          />
         </div>
 
         {issues.length > 0 && (
