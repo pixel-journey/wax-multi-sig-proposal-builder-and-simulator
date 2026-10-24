@@ -32,6 +32,7 @@ import {
 import { PRESETS } from '../examples/presets';
 import { aggregateRiskScore } from '../examples/riskScore';
 import { clearDraft, loadDraft, saveDraft } from '../examples/storage';
+import { TableRowsPanel } from '../examples/TableRowsPanel';
 import type { Approval, ProposalConfig } from '../examples/types';
 import {
   emptyUndo,
@@ -258,7 +259,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 9 · undo stack · force-all sequence
+          Pass 11 · normalized proposal rows + filter
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -650,16 +651,7 @@ export default function MultiSigProposalBuilder() {
                 Download CSV
               </button>
             </div>
-            {tableRows && (
-              <details className="text-[10px] opacity-60" open>
-                <summary>
-                  On-chain {tableLabel} rows ({tableRows.length})
-                </summary>
-                <pre className="overflow-x-auto mt-2 max-h-40">
-                  {JSON.stringify(tableRows, null, 2)}
-                </pre>
-              </details>
-            )}
+            <TableRowsPanel label={tableLabel} rows={tableRows} />
           </div>
         </div>
 
