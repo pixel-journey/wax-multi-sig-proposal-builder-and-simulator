@@ -33,6 +33,13 @@ import { PRESETS } from '../examples/presets';
 import { aggregateRiskScore } from '../examples/riskScore';
 import { clearDraft, loadDraft, saveDraft } from '../examples/storage';
 import type { Approval, ProposalConfig } from '../examples/types';
+import {
+  emptyUndo,
+  popUndo,
+  pushUndo,
+  undoDepth,
+  type UndoStack,
+} from '../examples/undo';
 import { validateDraft } from '../examples/validate';
 
 const defaultApprovals: Approval[] = PRESETS[0].config.approvals;
@@ -51,6 +58,8 @@ export default function MultiSigProposalBuilder() {
   const [probing, setProbing] = useState(false);
   const [tableRows, setTableRows] = useState<unknown[] | null>(null);
   const [tableLabel, setTableLabel] = useState('proposal');
+  const [undo, setUndo] = useState<UndoStack>(() => emptyUndo());
+  const [seqMode, setSeqMode] = useState<'checked' | 'all'>('checked');
 
   useEffect(() => {
     const d = loadDraft();
@@ -96,9 +105,40 @@ export default function MultiSigProposalBuilder() {
         proposer,
         proposalName,
         approvals,
+        forceAll: seqMode === 'all',
       }),
-    [proposer, proposalName, approvals]
+    [proposer, proposalName, approvals, seqMode]
   );
+
+  const recordUndo = () => {
+    setUndo((u) =>
+      pushUndo(u, {
+        proposer,
+        config: {
+          proposalName,
+          threshold,
+          approvals,
+          actionSummary,
+        },
+      })
+    );
+  };
+
+  const doUndo = () => {
+    const r = popUndo(undo);
+    if (!r.ok) {
+      setStatus(r.reason);
+      return;
+    }
+    setUndo(r.stack);
+    setProposer(r.snap.proposer);
+    setProposalName(r.snap.config.proposalName);
+    setThreshold(r.snap.config.threshold);
+    setApprovals(r.snap.config.approvals);
+    if (r.snap.config.actionSummary)
+      setActionSummary(r.snap.config.actionSummary);
+    setStatus(`Undid · depth ${undoDepth(r.stack)}`);
+  };
 
   const actionSketches = useMemo(() => {
     const requested = approvals.map((a) => ({
@@ -155,6 +195,7 @@ export default function MultiSigProposalBuilder() {
   };
 
   const applyPreset = (id: string) => {
+    recordUndo();
     const p = PRESETS.find((x) => x.id === id);
     if (!p) return;
     setProposalName(p.config.proposalName.replace(/-/g, '').slice(0, 12));
@@ -171,6 +212,7 @@ export default function MultiSigProposalBuilder() {
       setStatus('Approver already listed');
       return;
     }
+    recordUndo();
     setApprovals([
       ...approvals,
       { account: a, weight: 1, hasApproved: false, permission: 'active' },
@@ -216,7 +258,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 8 · downloads · approve sequence · permission
+          Pass 9 · undo stack · force-all sequence
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -231,6 +273,14 @@ export default function MultiSigProposalBuilder() {
               {p.label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={doUndo}
+            disabled={undoDepth(undo) === 0}
+            className="px-2 py-1 rounded-lg text-xs bg-amber-900 disabled:opacity-40"
+          >
+            Undo ({undoDepth(undo)})
+          </button>
           <button
             type="button"
             onClick={persist}
@@ -333,14 +383,20 @@ export default function MultiSigProposalBuilder() {
                 <button
                   type="button"
                   className="text-[10px] underline opacity-60"
-                  onClick={() => setApprovals(setAllApproved(approvals, true))}
+                  onClick={() => {
+                    recordUndo();
+                    setApprovals(setAllApproved(approvals, true));
+                  }}
                 >
                   approve all
                 </button>
                 <button
                   type="button"
                   className="text-[10px] underline opacity-60"
-                  onClick={() => setApprovals(clearApprovals(approvals))}
+                  onClick={() => {
+                    recordUndo();
+                    setApprovals(clearApprovals(approvals));
+                  }}
                 >
                   clear all
                 </button>
@@ -353,9 +409,10 @@ export default function MultiSigProposalBuilder() {
                   >
                     <button
                       type="button"
-                      onClick={() =>
-                        setApprovals(toggleApproval(approvals, a.account))
-                      }
+                      onClick={() => {
+                        recordUndo();
+                        setApprovals(toggleApproval(approvals, a.account));
+                      }}
                       className={
                         a.hasApproved ? 'text-emerald-400' : 'text-white/40'
                       }
@@ -396,11 +453,12 @@ export default function MultiSigProposalBuilder() {
                     <button
                       type="button"
                       className="text-red-400 text-xs"
-                      onClick={() =>
+                      onClick={() => {
+                        recordUndo();
                         setApprovals(
                           approvals.filter((x) => x.account !== a.account)
-                        )
-                      }
+                        );
+                      }}
                     >
                       remove
                     </button>
@@ -481,9 +539,28 @@ export default function MultiSigProposalBuilder() {
                 </li>
               ))}
             </ul>
+            <div className="flex gap-2 text-[10px]">
+              <button
+                type="button"
+                className={`px-2 py-1 rounded ${
+                  seqMode === 'checked' ? 'bg-emerald-800' : 'bg-white/10'
+                }`}
+                onClick={() => setSeqMode('checked')}
+              >
+                Sequence: checked only
+              </button>
+              <button
+                type="button"
+                className={`px-2 py-1 rounded ${
+                  seqMode === 'all' ? 'bg-emerald-800' : 'bg-white/10'
+                }`}
+                onClick={() => setSeqMode('all')}
+              >
+                Sequence: force all
+              </button>
+            </div>
             {approveSeq.length > 0 && (
               <pre className="text-[10px] opacity-60 whitespace-pre-wrap">
-                Approve sequence (simulated checks):\n
                 {sequenceSummary(approveSeq)}
               </pre>
             )}
@@ -534,7 +611,11 @@ export default function MultiSigProposalBuilder() {
                 type="button"
                 onClick={() => {
                   const b = exportBasename();
-                  dl(`${b}.md`, exportProposalMarkdown(config, proposer), 'text/markdown');
+                  dl(
+                    `${b}.md`,
+                    exportProposalMarkdown(config, proposer),
+                    'text/markdown'
+                  );
                 }}
                 className="px-3 py-2 rounded-xl bg-indigo-800 text-sm"
               >
@@ -544,7 +625,11 @@ export default function MultiSigProposalBuilder() {
                 type="button"
                 onClick={() => {
                   const b = exportBasename();
-                  dl(`${b}.json`, exportProposalJson(config, proposer), 'application/json');
+                  dl(
+                    `${b}.json`,
+                    exportProposalJson(config, proposer),
+                    'application/json'
+                  );
                 }}
                 className="px-3 py-2 rounded-xl bg-indigo-700 text-sm"
               >
@@ -554,7 +639,11 @@ export default function MultiSigProposalBuilder() {
                 type="button"
                 onClick={() => {
                   const b = exportBasename();
-                  dl(`${b}.csv`, exportApproversCsv(config, proposer), 'text/csv');
+                  dl(
+                    `${b}.csv`,
+                    exportApproversCsv(config, proposer),
+                    'text/csv'
+                  );
                 }}
                 className="px-3 py-2 rounded-xl bg-indigo-600 text-sm"
               >

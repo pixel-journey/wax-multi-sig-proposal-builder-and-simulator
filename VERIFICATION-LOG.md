@@ -1,16 +1,16 @@
 # Verification Log
 
 **Trust label:** educational-reference  
-**Updated:** 2026-10-25 (Pass 8)
+**Updated:** 2026-10-25 (Pass 9)
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Pass 1–7 | unit + UI | prior |
-| download basename | **verified** | download.test.ts |
-| approve sequence | **verified** | approveSequence.test.ts |
+| Pass 1–8 | unit + UI | prior |
+| undo stack | **verified** | undo.test.ts |
+| force-all sequence | UI + prior unit | approveSequence |
 | Live msig broadcast | host + WharfKit | WHARFKIT.md |
 
-Clipboard **and** download both available — nothing removed.
+Features only added — clipboard, downloads, undo all present.
 
 ```bash
 npm install && npm test
