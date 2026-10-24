@@ -18,6 +18,7 @@ import {
   exportProposalJson,
   exportProposalMarkdown,
 } from '../examples/exportPlan';
+import { importDraftJson } from '../examples/importDraft';
 import {
   buildApproveAction,
   buildExecAction,
@@ -61,6 +62,7 @@ export default function MultiSigProposalBuilder() {
   const [tableLabel, setTableLabel] = useState('proposal');
   const [undo, setUndo] = useState<UndoStack>(() => emptyUndo());
   const [seqMode, setSeqMode] = useState<'checked' | 'all'>('checked');
+  const [importText, setImportText] = useState('');
 
   useEffect(() => {
     const d = loadDraft();
@@ -259,7 +261,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 11 · normalized proposal rows + filter
+          Pass 12 · import draft · pick proposal name
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -651,9 +653,49 @@ export default function MultiSigProposalBuilder() {
                 Download CSV
               </button>
             </div>
-            <TableRowsPanel label={tableLabel} rows={tableRows} />
+            <TableRowsPanel
+              label={tableLabel}
+              rows={tableRows}
+              onPickProposalName={(name) => {
+                recordUndo();
+                setProposalName(name);
+                setStatus(`Loaded proposal name ${name}`);
+              }}
+            />
           </div>
         </div>
+
+        <section className="mt-8 border border-white/10 bg-black/40 p-4 rounded-2xl space-y-2">
+          <p className="text-xs opacity-60">
+            Import draft JSON (export format or {'{'} proposer, config {'}'})
+          </p>
+          <textarea
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            rows={3}
+            className="w-full font-mono text-[10px] bg-black/60 border border-white/10 rounded-lg p-2"
+          />
+          <button
+            type="button"
+            className="px-3 py-2 rounded-xl text-sm bg-violet-900"
+            onClick={() => {
+              const r = importDraftJson(importText);
+              if (!r.ok) {
+                setStatus(r.reason);
+                return;
+              }
+              recordUndo();
+              setProposer(r.proposer);
+              setProposalName(r.config.proposalName);
+              setThreshold(r.config.threshold);
+              setApprovals(r.config.approvals);
+              if (r.config.actionSummary) setActionSummary(r.config.actionSummary);
+              setStatus('Imported draft JSON');
+            }}
+          >
+            Import JSON
+          </button>
+        </section>
 
         {status && (
           <p className="mt-6 text-xs text-emerald-200/80" role="status">
