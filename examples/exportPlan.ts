@@ -2,8 +2,10 @@ import {
   analyzeProposalRisks,
   computeThresholdSnapshot,
 } from "./engines";
+import { aggregateRiskScore } from "./riskScore";
 import type { ProposalConfig } from "./types";
 import { sketchProposeMemo } from "./wharfPropose.sketch";
+import { validateDraft } from "./validate";
 
 export function exportProposalMarkdown(
   config: ProposalConfig,
@@ -11,6 +13,13 @@ export function exportProposalMarkdown(
 ): string {
   const snap = computeThresholdSnapshot(config);
   const risks = analyzeProposalRisks(config);
+  const { score, label } = aggregateRiskScore(risks);
+  const issues = validateDraft({
+    proposer,
+    proposalName: config.proposalName,
+    threshold: config.threshold,
+    accounts: (config.approvals ?? []).map((a) => a.account),
+  });
   const sketch = sketchProposeMemo({
     proposer,
     proposalName: config.proposalName || "unnamed",
@@ -20,7 +29,7 @@ export function exportProposalMarkdown(
   const lines = [
     `# Multi-sig proposal — ${config.proposalName || "unnamed"}`,
     "",
-    `> Proposer: \`${proposer}\` · threshold ${config.threshold} · progress ${snap.progressPercent}%`,
+    `> Proposer: \`${proposer}\` · threshold ${config.threshold} · progress ${snap.progressPercent}% · risk **${score}** (${label})`,
     "",
     config.actionSummary ? `**Actions:** ${config.actionSummary}\n` : "",
     "## Approvers",
@@ -38,9 +47,13 @@ export function exportProposalMarkdown(
     `Approved weight: **${snap.approvedWeight}** / ${snap.threshold} (total available ${snap.totalWeight})`,
     snap.thresholdMet ? "\n**Threshold met** under this simulation." : "",
     "",
-    "## Risks",
+    "## Validation",
     ""
   );
+  if (issues.length === 0) lines.push("- No validation errors");
+  else for (const i of issues) lines.push(`- **${i.level}** ${i.field}: ${i.message}`);
+
+  lines.push("", "## Risks", "");
   for (const r of risks) {
     lines.push(`- **${r.level}** (${r.id}): ${r.message}`);
   }
@@ -63,12 +76,20 @@ export function exportProposalJson(
   config: ProposalConfig,
   proposer: string
 ): string {
+  const risks = analyzeProposalRisks(config);
   return JSON.stringify(
     {
       trustLabel: "educational-reference",
       proposer,
       snapshot: computeThresholdSnapshot(config),
-      risks: analyzeProposalRisks(config),
+      riskScore: aggregateRiskScore(risks),
+      risks,
+      validation: validateDraft({
+        proposer,
+        proposalName: config.proposalName,
+        threshold: config.threshold,
+        accounts: (config.approvals ?? []).map((a) => a.account),
+      }),
       config,
       msigSketch: sketchProposeMemo({
         proposer,

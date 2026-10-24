@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { exportProposalJson, exportProposalMarkdown } from "./exportPlan";
 
 describe("exportPlan", () => {
-  it("includes WharfKit and threshold", () => {
+  it("includes WharfKit, risk score, validation", () => {
     const md = exportProposalMarkdown(
       {
         proposalName: "pay1",
@@ -16,6 +16,7 @@ describe("exportPlan", () => {
     );
     expect(md).toContain("WharfKit");
     expect(md).toContain("pay1");
+    expect(md).toContain("risk");
     const j = JSON.parse(
       exportProposalJson(
         {
@@ -27,5 +28,7 @@ describe("exportPlan", () => {
       )
     );
     expect(j.msigSketch.proposer).toBe("alice");
+    expect(j.riskScore).toBeDefined();
+    expect(Array.isArray(j.validation)).toBe(true);
   });
 });

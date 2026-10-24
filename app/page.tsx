@@ -20,6 +20,7 @@ import {
   exampleInnerTransfer,
 } from '../examples/msigActions';
 import {
+  approvalsByProposerRequest,
   fetchTableRows,
   proposalsByProposerRequest,
 } from '../examples/msigTableProbe';
@@ -44,6 +45,7 @@ export default function MultiSigProposalBuilder() {
   const [hydrated, setHydrated] = useState(false);
   const [probing, setProbing] = useState(false);
   const [tableRows, setTableRows] = useState<unknown[] | null>(null);
+  const [tableLabel, setTableLabel] = useState('proposal');
 
   useEffect(() => {
     const d = loadDraft();
@@ -161,9 +163,12 @@ export default function MultiSigProposalBuilder() {
     );
   };
 
-  const probeProposals = async () => {
+  const probeTable = async (kind: 'proposal' | 'approvals') => {
     setProbing(true);
-    const req = proposalsByProposerRequest(proposer.trim());
+    const req =
+      kind === 'proposal'
+        ? proposalsByProposerRequest(proposer.trim())
+        : approvalsByProposerRequest(proposer.trim());
     const r = await fetchTableRows(req);
     setProbing(false);
     if (!r.ok) {
@@ -171,9 +176,10 @@ export default function MultiSigProposalBuilder() {
       setStatus(`Table probe soft-fail: ${r.reason}`);
       return;
     }
+    setTableLabel(kind);
     setTableRows(r.rows);
     setStatus(
-      `eosio.msig::proposal rows: ${r.rows.length}${r.more ? ' (more)' : ''}`
+      `eosio.msig::${kind} rows: ${r.rows.length}${r.more ? ' (more)' : ''}`
     );
   };
 
@@ -184,7 +190,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 6 · bulk approvals · risk score · WharfKit doc
+          Pass 7 · approvals table · richer export
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -227,10 +233,18 @@ export default function MultiSigProposalBuilder() {
           <button
             type="button"
             disabled={probing}
-            onClick={probeProposals}
+            onClick={() => probeTable('proposal')}
             className="px-2 py-1 rounded-lg text-xs bg-sky-800 disabled:opacity-50"
           >
-            Probe msig proposals
+            Probe proposals table
+          </button>
+          <button
+            type="button"
+            disabled={probing}
+            onClick={() => probeTable('approvals')}
+            className="px-2 py-1 rounded-lg text-xs bg-sky-700 disabled:opacity-50"
+          >
+            Probe approvals table
           </button>
         </div>
 
@@ -472,22 +486,16 @@ export default function MultiSigProposalBuilder() {
             </div>
             {tableRows && (
               <details className="text-[10px] opacity-60" open>
-                <summary>On-chain proposal rows ({tableRows.length})</summary>
+                <summary>
+                  On-chain {tableLabel} rows ({tableRows.length})
+                </summary>
                 <pre className="overflow-x-auto mt-2 max-h-40">
                   {JSON.stringify(tableRows, null, 2)}
                 </pre>
               </details>
             )}
             <p className="text-[10px] opacity-50">
-              Live path: see{' '}
-              <a
-                className="underline text-emerald-400"
-                href="https://github.com/pixel-journey/wax-multi-sig-proposal-builder-and-simulator/blob/main/WHARFKIT.md"
-                target="_blank"
-                rel="noreferrer"
-              >
-                WHARFKIT.md
-              </a>
+              Live path: see WHARFKIT.md · host + session.transact
             </p>
           </div>
         </div>
