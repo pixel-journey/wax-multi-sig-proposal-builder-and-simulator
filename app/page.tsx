@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   analyzeProposalRisks,
   computeThresholdSnapshot,
@@ -10,17 +10,21 @@ import {
   exportProposalJson,
   exportProposalMarkdown,
 } from '../examples/exportPlan';
+import {
+  buildApproveAction,
+  buildExecAction,
+  buildProposeAction,
+  exampleInnerTransfer,
+} from '../examples/msigActions';
+import { PRESETS } from '../examples/presets';
+import { clearDraft, loadDraft, saveDraft } from '../examples/storage';
 import type { Approval, ProposalConfig } from '../examples/types';
 
-const defaultApprovals: Approval[] = [
-  { account: 'alice.wam', weight: 1, hasApproved: false },
-  { account: 'bob.wam', weight: 1, hasApproved: false },
-  { account: 'carol.wam', weight: 1, hasApproved: false },
-];
+const defaultApprovals: Approval[] = PRESETS[0].config.approvals;
 
 export default function MultiSigProposalBuilder() {
   const [proposer, setProposer] = useState('alice.wam');
-  const [proposalName, setProposalName] = useState('ops-pay-001');
+  const [proposalName, setProposalName] = useState('ops-2of3');
   const [threshold, setThreshold] = useState(2);
   const [approvals, setApprovals] = useState<Approval[]>(defaultApprovals);
   const [newActor, setNewActor] = useState('');
@@ -28,6 +32,21 @@ export default function MultiSigProposalBuilder() {
     'eosio.token::transfer (example)'
   );
   const [status, setStatus] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const d = loadDraft();
+    if (d.ok && d.value) {
+      setProposer(d.value.proposer);
+      setProposalName(d.value.config.proposalName);
+      setThreshold(d.value.config.threshold);
+      setApprovals(d.value.config.approvals);
+      if (d.value.config.actionSummary)
+        setActionSummary(d.value.config.actionSummary);
+      setStatus('Restored draft from localStorage');
+    }
+    setHydrated(true);
+  }, []);
 
   const config: ProposalConfig = useMemo(
     () => ({
@@ -42,6 +61,38 @@ export default function MultiSigProposalBuilder() {
   const snap = useMemo(() => computeThresholdSnapshot(config), [config]);
   const risks = useMemo(() => analyzeProposalRisks(config), [config]);
 
+  const actionSketches = useMemo(() => {
+    const requested = approvals.map((a) => ({
+      actor: a.account,
+      permission: 'active',
+    }));
+    const inner = exampleInnerTransfer({
+      from: proposer,
+      to: 'bob.wam',
+      quantity: '1.00000000 WAX',
+      memo: actionSummary,
+    });
+    const propose = buildProposeAction({
+      proposer,
+      proposalName,
+      requested,
+      trx: { actions: [inner], note: 'Host must serialize trx via WharfKit' },
+    });
+    const approve =
+      approvals[0] &&
+      buildApproveAction({
+        proposer,
+        proposalName,
+        level: { actor: approvals[0].account, permission: 'active' },
+      });
+    const exec = buildExecAction({
+      proposer,
+      proposalName,
+      executer: proposer,
+    });
+    return { propose, approve, exec, inner };
+  }, [approvals, proposer, proposalName, actionSummary]);
+
   const copy = async (text: string, ok: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -49,6 +100,21 @@ export default function MultiSigProposalBuilder() {
     } catch {
       setStatus('Clipboard unavailable');
     }
+  };
+
+  const persist = () => {
+    const r = saveDraft({ proposer, config });
+    setStatus(r.ok ? 'Draft saved' : r.reason ?? 'Save failed');
+  };
+
+  const applyPreset = (id: string) => {
+    const p = PRESETS.find((x) => x.id === id);
+    if (!p) return;
+    setProposalName(p.config.proposalName);
+    setThreshold(p.config.threshold);
+    setApprovals(p.config.approvals.map((a) => ({ ...a })));
+    if (p.config.actionSummary) setActionSummary(p.config.actionSummary);
+    setStatus(`Preset: ${p.label}`);
   };
 
   const addApprover = () => {
@@ -69,12 +135,39 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pixel Journey · Pass 2 · engines + export · WharfKit for live msig
+          Pass 3 · msig actions · presets · localStorage
+          {!hydrated && ' · hydrating…'}
         </div>
-        <p className="text-xs opacity-50 mb-8 max-w-2xl">
-          Simulate M-of-N weight offline, then export an eosio.msig-oriented plan.
-          Host apps run propose/approve/exec with WharfKit session.transact.
-        </p>
+
+        <div className="flex flex-wrap gap-2 mb-6">
+          {PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => applyPreset(p.id)}
+              className="px-2 py-1 rounded-lg text-xs bg-white/10"
+            >
+              {p.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={persist}
+            className="px-2 py-1 rounded-lg text-xs bg-violet-800"
+          >
+            Save draft
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              clearDraft();
+              setStatus('Draft cleared');
+            }}
+            className="px-2 py-1 rounded-lg text-xs bg-white/10"
+          >
+            Clear storage
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="border border-white/10 bg-black/40 p-6 rounded-2xl space-y-4">
@@ -153,7 +246,9 @@ export default function MultiSigProposalBuilder() {
                       type="button"
                       className="text-red-400 text-xs"
                       onClick={() =>
-                        setApprovals(approvals.filter((x) => x.account !== a.account))
+                        setApprovals(
+                          approvals.filter((x) => x.account !== a.account)
+                        )
                       }
                     >
                       remove
@@ -237,19 +332,34 @@ export default function MultiSigProposalBuilder() {
               <button
                 type="button"
                 onClick={() =>
-                  copy(
-                    exportProposalJson(config, proposer),
-                    'JSON plan copied'
-                  )
+                  copy(exportProposalJson(config, proposer), 'JSON plan copied')
                 }
                 className="px-4 py-2 rounded-xl bg-sky-900 text-sm"
               >
                 Copy JSON
               </button>
+              <button
+                type="button"
+                onClick={() =>
+                  copy(
+                    JSON.stringify(actionSketches, null, 2),
+                    'msig action sketches copied'
+                  )
+                }
+                className="px-4 py-2 rounded-xl bg-indigo-900 text-sm"
+              >
+                Copy msig actions
+              </button>
             </div>
+            <details className="text-[10px] opacity-50">
+              <summary>propose / approve / exec sketches</summary>
+              <pre className="overflow-x-auto mt-2 max-h-48">
+                {JSON.stringify(actionSketches, null, 2)}
+              </pre>
+            </details>
             <p className="text-[10px] opacity-50">
-              Live propose/approve/exec: host app + WharfKit (see
-              examples/wharfPropose.sketch.ts). Pure UI does not auto-broadcast.
+              Serialize inner trx with WharfKit, then session.transact the outer
+              eosio.msig actions. UI does not auto-broadcast.
             </p>
           </div>
         </div>
