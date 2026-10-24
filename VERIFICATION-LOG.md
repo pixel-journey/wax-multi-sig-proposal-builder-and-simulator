@@ -1,14 +1,14 @@
 # Verification Log
 
 **Trust label:** educational-reference  
-**Updated:** 2026-10-25 (Pass 3)
+**Updated:** 2026-10-25 (Pass 4)
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Engines + export | unit | Pass 1–2 |
-| msig propose/approve/exec builders | **verified** | msigActions.test.ts |
-| Presets + localStorage | UI | Pass 3 |
-| Live mainnet msig | host + WharfKit | example path |
+| Engines / export / msig builders | unit | Pass 1–3 |
+| validateDraft / proposal names | **verified** | validate.test.ts |
+| get_account soft-fail | UI probe | chainProbe.ts |
+| Live msig broadcast | host + WharfKit | example path |
 
 ```bash
 npm install && npm test

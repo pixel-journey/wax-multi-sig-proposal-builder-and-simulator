@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { probeGetAccount } from '../examples/chainProbe';
 import {
   analyzeProposalRisks,
   computeThresholdSnapshot,
@@ -19,12 +20,13 @@ import {
 import { PRESETS } from '../examples/presets';
 import { clearDraft, loadDraft, saveDraft } from '../examples/storage';
 import type { Approval, ProposalConfig } from '../examples/types';
+import { validateDraft } from '../examples/validate';
 
 const defaultApprovals: Approval[] = PRESETS[0].config.approvals;
 
 export default function MultiSigProposalBuilder() {
   const [proposer, setProposer] = useState('alice.wam');
-  const [proposalName, setProposalName] = useState('ops-2of3');
+  const [proposalName, setProposalName] = useState('ops2of3');
   const [threshold, setThreshold] = useState(2);
   const [approvals, setApprovals] = useState<Approval[]>(defaultApprovals);
   const [newActor, setNewActor] = useState('');
@@ -33,6 +35,7 @@ export default function MultiSigProposalBuilder() {
   );
   const [status, setStatus] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [probing, setProbing] = useState(false);
 
   useEffect(() => {
     const d = loadDraft();
@@ -60,6 +63,16 @@ export default function MultiSigProposalBuilder() {
 
   const snap = useMemo(() => computeThresholdSnapshot(config), [config]);
   const risks = useMemo(() => analyzeProposalRisks(config), [config]);
+  const issues = useMemo(
+    () =>
+      validateDraft({
+        proposer,
+        proposalName,
+        threshold,
+        accounts: approvals.map((a) => a.account),
+      }),
+    [proposer, proposalName, threshold, approvals]
+  );
 
   const actionSketches = useMemo(() => {
     const requested = approvals.map((a) => ({
@@ -110,7 +123,7 @@ export default function MultiSigProposalBuilder() {
   const applyPreset = (id: string) => {
     const p = PRESETS.find((x) => x.id === id);
     if (!p) return;
-    setProposalName(p.config.proposalName);
+    setProposalName(p.config.proposalName.replace(/-/g, '').slice(0, 12));
     setThreshold(p.config.threshold);
     setApprovals(p.config.approvals.map((a) => ({ ...a })));
     if (p.config.actionSummary) setActionSummary(p.config.actionSummary);
@@ -128,6 +141,17 @@ export default function MultiSigProposalBuilder() {
     setNewActor('');
   };
 
+  const probeProposer = async () => {
+    setProbing(true);
+    const r = await probeGetAccount(proposer.trim());
+    setProbing(false);
+    setStatus(
+      r.ok
+        ? `get_account ok · ${r.account}${r.created ? ` · created ${r.created}` : ''}`
+        : `Probe soft-fail: ${r.reason}`
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
@@ -135,7 +159,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 3 · msig actions · presets · localStorage
+          Pass 4 · validation · chain probe
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -167,7 +191,30 @@ export default function MultiSigProposalBuilder() {
           >
             Clear storage
           </button>
+          <button
+            type="button"
+            disabled={probing}
+            onClick={probeProposer}
+            className="px-2 py-1 rounded-lg text-xs bg-sky-900 disabled:opacity-50"
+          >
+            {probing ? 'Probing…' : 'Probe proposer get_account'}
+          </button>
         </div>
+
+        {issues.length > 0 && (
+          <ul className="mb-4 text-xs space-y-1">
+            {issues.map((i, idx) => (
+              <li
+                key={`${i.field}-${idx}`}
+                className={
+                  i.level === 'error' ? 'text-red-400' : 'text-amber-400'
+                }
+              >
+                [{i.level}] {i.field}: {i.message}
+              </li>
+            ))}
+          </ul>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="border border-white/10 bg-black/40 p-6 rounded-2xl space-y-4">
@@ -181,7 +228,7 @@ export default function MultiSigProposalBuilder() {
               />
             </label>
             <label className="block text-xs opacity-70">
-              Proposal name
+              Proposal name (a-z1-5., ≤12)
               <input
                 value={proposalName}
                 onChange={(e) => setProposalName(e.target.value)}
@@ -243,8 +290,7 @@ export default function MultiSigProposalBuilder() {
                       className="w-14 bg-black/60 border border-white/10 rounded px-1 py-0.5"
                     />
                     <button
-                      type="button"
-                      className="text-red-400 text-xs"
+                      type="button"ians className="text-red-400 text-xs"
                       onClick={() =>
                         setApprovals(
                           approvals.filter((x) => x.account !== a.account)
@@ -357,10 +403,6 @@ export default function MultiSigProposalBuilder() {
                 {JSON.stringify(actionSketches, null, 2)}
               </pre>
             </details>
-            <p className="text-[10px] opacity-50">
-              Serialize inner trx with WharfKit, then session.transact the outer
-              eosio.msig actions. UI does not auto-broadcast.
-            </p>
           </div>
         </div>
 
