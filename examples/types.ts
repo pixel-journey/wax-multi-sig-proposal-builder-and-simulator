@@ -26,6 +26,10 @@ export interface ProposalConfig {
   approvals: Approval[];
   /** Optional human label for the underlying action set */
   actionSummary?: string;
+  /** Free-form operator notes (not on-chain) */
+  notes?: string;
+  /** Optional proposal hash for approve when chain requires it */
+  proposalHash?: string;
 }
 
 export interface ThresholdSnapshot {

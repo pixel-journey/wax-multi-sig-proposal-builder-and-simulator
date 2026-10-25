@@ -10,6 +10,7 @@ export function buildApproveSequence(input: {
   proposalName: string;
   approvals: Approval[];
   forceAll?: boolean;
+  proposalHash?: string;
 }): ChainAction[] {
   const list = input.forceAll
     ? input.approvals
@@ -22,6 +23,7 @@ export function buildApproveSequence(input: {
         actor: a.account,
         permission: a.permission ?? "active",
       },
+      proposal_hash: input.proposalHash,
     })
   );
 }

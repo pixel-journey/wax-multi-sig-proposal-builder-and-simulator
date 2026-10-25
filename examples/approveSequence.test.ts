@@ -15,6 +15,16 @@ describe("approveSequence", () => {
     expect(actions[0].data.level).toEqual({ actor: "a", permission: "active" });
   });
 
+  it("includes proposal_hash when provided", () => {
+    const actions = buildApproveSequence({
+      proposer: "alice",
+      proposalName: "pay1",
+      approvals: [{ account: "a", weight: 1, hasApproved: true }],
+      proposalHash: "deadbeef",
+    });
+    expect(actions[0].data.proposal_hash).toBe("deadbeef");
+  });
+
   it("forceAll", () => {
     const actions = buildApproveSequence({
       proposer: "alice",

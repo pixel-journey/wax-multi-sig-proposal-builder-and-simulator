@@ -32,6 +32,8 @@ export function exportProposalMarkdown(
     `> Proposer: \`${proposer}\` · threshold ${config.threshold} · progress ${snap.progressPercent}% · risk **${score}** (${label})`,
     "",
     config.actionSummary ? `**Actions:** ${config.actionSummary}\n` : "",
+    config.notes ? `**Notes:** ${config.notes}\n` : "",
+    config.proposalHash ? `**Proposal hash:** \`${config.proposalHash}\`\n` : "",
     "## Approvers",
     "",
   ];
