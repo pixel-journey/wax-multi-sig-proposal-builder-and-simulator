@@ -16,6 +16,7 @@ import {
   computeThresholdSnapshot,
   toggleApproval,
 } from '../examples/engines';
+import { equalizeWeights } from '../examples/equalizeWeights';
 import {
   exportProposalJson,
   exportProposalMarkdown,
@@ -341,7 +342,7 @@ export default function MultiSigProposalBuilder() {
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
         <div className="text-2xl tracking-widest text-emerald-400 mb-2 font-bold">MULTI-SIG PROPOSAL BUILDER</div>
-        <div className="text-xs opacity-60 mb-2">Pass 26 · majority threshold suggest{!hydrated && ' · hydrating…'}</div>
+        <div className="text-xs opacity-60 mb-2">Pass 27 · equalize weights{!hydrated && ' · hydrating…'}</div>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {PRESETS.map((p) => (
@@ -395,6 +396,7 @@ export default function MultiSigProposalBuilder() {
                 <span className="text-xs opacity-70">Approvers</span>
                 <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(setAllApproved(approvals, true)); }}>approve all</button>
                 <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(clearApprovals(approvals)); }}>clear all</button>
+                <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(equalizeWeights(approvals, 1)); }}>equalize weights</button>
               </div>
               <ul className="space-y-2">
                 {approvals.map((a) => (
