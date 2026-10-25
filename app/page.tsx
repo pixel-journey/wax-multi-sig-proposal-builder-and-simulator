@@ -7,6 +7,7 @@ import {
 } from '../examples/approveSequence';
 import { clearApprovals, setAllApproved } from '../examples/bulkApprovals';
 import { probeGetAccount } from '../examples/chainProbe';
+import { chainIdLabel } from '../examples/chainId';
 import { exportApproversCsv } from '../examples/csvExport';
 import { downloadTextFile, exportBasename } from '../examples/download';
 import {
@@ -72,6 +73,7 @@ export default function MultiSigProposalBuilder() {
   const [importText, setImportText] = useState('');
   const [rpcBase, setRpcBase] = useState(DEFAULT_RPC);
   const [includeCancel, setIncludeCancel] = useState(false);
+  const [includeUnapprove, setIncludeUnapprove] = useState(false);
 
   useEffect(() => {
     const d = loadDraft();
@@ -130,8 +132,9 @@ export default function MultiSigProposalBuilder() {
         approvals,
         forceAllApproves: seqMode === 'all',
         includeCancel,
+        includeUnapprove,
       }),
-    [proposer, proposalName, approvals, seqMode, includeCancel]
+    [proposer, proposalName, approvals, seqMode, includeCancel, includeUnapprove]
   );
 
   const recordUndo = () => {
@@ -281,7 +284,7 @@ export default function MultiSigProposalBuilder() {
     setProbing(false);
     setStatus(
       r.ok
-        ? `get_info ok · head ${r.headBlockNum} · chain ${r.chainId.slice(0, 8)}…`
+        ? `get_info ok · head ${r.headBlockNum} · ${chainIdLabel(r.chainId)}`
         : `get_info soft-fail: ${r.reason}`
     );
   };
@@ -293,24 +296,15 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 16 · get_info probe · lifecycle download
+          Pass 17 · chain-id check · unapprove lifecycle
           {!hydrated && ' · hydrating…'}
         </div>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => applyPreset(p.id)}
-              className="px-2 py-1 rounded-lg text-xs bg-white/10"
-            >
-              {p.label}
-            </button>
+            <button key={p.id} type="button" onClick={() => applyPreset(p.id)} className="px-2 py-1 rounded-lg text-xs bg-white/10">{p.label}</button>
           ))}
-          <button type="button" onClick={doUndo} disabled={undoDepth(undo) === 0} className="px-2 py-1 rounded-lg text-xs bg-amber-900 disabled:opacity-40">
-            Undo ({undoDepth(undo)})
-          </button>
+          <button type="button" onClick={doUndo} disabled={undoDepth(undo) === 0} className="px-2 py-1 rounded-lg text-xs bg-amber-900 disabled:opacity-40">Undo ({undoDepth(undo)})</button>
           <button type="button" onClick={persist} className="px-2 py-1 rounded-lg text-xs bg-violet-800">Save draft</button>
           <button type="button" onClick={() => { clearDraft(); setStatus('Draft cleared'); }} className="px-2 py-1 rounded-lg text-xs bg-white/10">Clear storage</button>
           <button type="button" disabled={probing} onClick={probeProposer} className="px-2 py-1 rounded-lg text-xs bg-sky-900 disabled:opacity-50">{probing ? 'Probing…' : 'Probe get_account'}</button>
@@ -329,9 +323,7 @@ export default function MultiSigProposalBuilder() {
         {issues.length > 0 && (
           <ul className="mb-4 text-xs space-y-1">
             {issues.map((i, idx) => (
-              <li key={`${i.field}-${idx}`} className={i.level === 'error' ? 'text-red-400' : 'text-amber-400'}>
-                [{i.level}] {i.field}: {i.message}
-              </li>
+              <li key={`${i.field}-${idx}`} className={i.level === 'error' ? 'text-red-400' : 'text-amber-400'}>[{i.level}] {i.field}: {i.message}</li>
             ))}
           </ul>
         )}
@@ -389,6 +381,7 @@ export default function MultiSigProposalBuilder() {
               <button type="button" onClick={() => copy(JSON.stringify(actionSketches, null, 2), 'msig actions copied')} className="px-3 py-2 rounded-xl bg-indigo-900 text-sm">Copy msig actions</button>
               <button type="button" onClick={() => copy(lifecycleToJson(lifecycle), 'Lifecycle JSON copied')} className="px-3 py-2 rounded-xl bg-fuchsia-900 text-sm">Copy lifecycle</button>
               <label className="flex items-center gap-1 text-[10px] opacity-70 px-2"><input type="checkbox" checked={includeCancel} onChange={(e) => setIncludeCancel(e.target.checked)} />include cancel</label>
+              <label className="flex items-center gap-1 text-[10px] opacity-70 px-2"><input type="checkbox" checked={includeUnapprove} onChange={(e) => setIncludeUnapprove(e.target.checked)} />include unapprove</label>
               <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.md`, exportProposalMarkdown(config, proposer), 'text/markdown'); }} className="px-3 py-2 rounded-xl bg-indigo-800 text-sm">Download MD</button>
               <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.json`, exportProposalJson(config, proposer), 'application/json'); }} className="px-3 py-2 rounded-xl bg-indigo-700 text-sm">Download JSON</button>
               <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.csv`, exportApproversCsv(config, proposer), 'text/csv'); }} className="px-3 py-2 rounded-xl bg-indigo-600 text-sm">Download CSV</button>
