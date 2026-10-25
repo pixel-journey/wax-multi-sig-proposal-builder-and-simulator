@@ -45,6 +45,7 @@ import {
   proposalsByProposerRequest,
 } from '../examples/msigTableProbe';
 import { checkProposalHash } from '../examples/proposalHash';
+import { normalizeAllPermissions } from '../examples/normalizePermissions';
 import { remainingLine } from '../examples/remainingWeight';
 import { buildShareSearchParam, decodeSharePayload } from '../examples/shareUrl';
 import { sortApprovers } from '../examples/sortApprovers';
@@ -54,6 +55,7 @@ import {
   buildSingleCancel,
   buildSingleExec,
   buildSinglePropose,
+  buildSingleUnapprove,
 } from '../examples/singleActions';
 import { aggregateRiskScore } from '../examples/riskScore';
 import { DEFAULT_RPC, RPC_PRESETS, normalizeRpcBase } from '../examples/rpcEndpoints';
@@ -343,7 +345,7 @@ export default function MultiSigProposalBuilder() {
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
         <div className="text-2xl tracking-widest text-emerald-400 mb-2 font-bold">MULTI-SIG PROPOSAL BUILDER</div>
-        <div className="text-xs opacity-60 mb-2">Pass 28 · sort approvers{!hydrated && ' · hydrating…'}</div>
+        <div className="text-xs opacity-60 mb-2">Pass 29 · normalize permissions{!hydrated && ' · hydrating…'}</div>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {PRESETS.map((p) => (
@@ -400,6 +402,7 @@ export default function MultiSigProposalBuilder() {
                 <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(equalizeWeights(approvals, 1)); }}>equalize weights</button>
                 <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(sortApprovers(approvals, 'weight-desc')); }}>sort by weight</button>
                 <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(sortApprovers(approvals, 'name-asc')); }}>sort by name</button>
+                <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(normalizeAllPermissions(approvals)); }}>normalize perms</button>
               </div>
               <ul className="space-y-2">
                 {approvals.map((a) => (
@@ -455,6 +458,16 @@ export default function MultiSigProposalBuilder() {
                   proposalHash: hashCheck.ok && hashCheck.normalized ? hashCheck.normalized : undefined,
                 }), null, 2), 'approve action copied');
               }} className="px-3 py-2 rounded-xl bg-stone-700 text-sm">Copy 1st approve</button>
+              <button type="button" onClick={() => {
+                const a = approvals[0];
+                if (!a) { setStatus('Add an approver first'); return; }
+                copy(JSON.stringify(buildSingleUnapprove({
+                  proposer,
+                  proposalName,
+                  account: a.account,
+                  permission: a.permission,
+                }), null, 2), 'unapprove action copied');
+              }} className="px-3 py-2 rounded-xl bg-stone-600 text-sm">Copy 1st unapprove</button>
               <button type="button" onClick={() => copy(JSON.stringify(buildSingleExec({ proposer, proposalName }), null, 2), 'exec action copied')} className="px-3 py-2 rounded-xl bg-stone-600 text-sm">Copy exec</button>
               <button type="button" onClick={() => copy(JSON.stringify(buildSingleCancel({ proposer, proposalName }), null, 2), 'cancel action copied')} className="px-3 py-2 rounded-xl bg-stone-500 text-sm">Copy cancel</button>
               <button type="button" onClick={() => copy(lifecycleToJson(lifecycle), 'Lifecycle JSON copied')} className="px-3 py-2 rounded-xl bg-fuchsia-900 text-sm">Copy lifecycle</button>
