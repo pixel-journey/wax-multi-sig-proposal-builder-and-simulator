@@ -24,6 +24,10 @@ import { probeGetInfo } from '../examples/getInfoProbe';
 import { importDraftJson } from '../examples/importDraft';
 import { checkThresholdFeasibility } from '../examples/impossibleThreshold';
 import {
+  suggestMajorityThreshold,
+  suggestSupermajorityThreshold,
+} from '../examples/majorityThreshold';
+import {
   buildLifecycleSketch,
   lifecycleToJson,
 } from '../examples/lifecycleSequence';
@@ -337,7 +341,7 @@ export default function MultiSigProposalBuilder() {
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
         <div className="text-2xl tracking-widest text-emerald-400 mb-2 font-bold">MULTI-SIG PROPOSAL BUILDER</div>
-        <div className="text-xs opacity-60 mb-2">Pass 24 · impossible threshold notice{!hydrated && ' · hydrating…'}</div>
+        <div className="text-xs opacity-60 mb-2">Pass 26 · majority threshold suggest{!hydrated && ' · hydrating…'}</div>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {PRESETS.map((p) => (
@@ -382,6 +386,10 @@ export default function MultiSigProposalBuilder() {
             <label className="block text-xs opacity-70">Proposal hash (optional for approve)<input value={proposalHash} onChange={(e) => setProposalHash(e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-2 rounded-xl font-mono text-sm" placeholder="hex hash if required" /></label>
             {!hashCheck.ok && <p className="text-[10px] text-amber-400">{hashCheck.reason}</p>}
             <label className="block text-xs opacity-70">Threshold weight<input type="number" min={1} value={threshold} onChange={(e) => setThreshold(Number(e.target.value) || 0)} className="w-28 mt-1 bg-black/60 border border-white/10 px-4 py-2 rounded-xl font-mono" /></label>
+            <div className="flex flex-wrap gap-2 text-[10px]">
+              <button type="button" className="underline opacity-70" onClick={() => { recordUndo(); setThreshold(suggestMajorityThreshold(approvals)); }}>use majority</button>
+              <button type="button" className="underline opacity-70" onClick={() => { recordUndo(); setThreshold(suggestSupermajorityThreshold(approvals)); }}>use ~2/3</button>
+            </div>
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className="text-xs opacity-70">Approvers</span>
