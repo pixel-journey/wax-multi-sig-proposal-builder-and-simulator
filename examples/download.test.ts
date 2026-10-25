@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { exportBasename } from "./download";
+import { exportBasename, sanitizeFilenamePart } from "./download";
 
-describe("download", () => {
-  it("basename", () => {
-    expect(exportBasename("msig")).toMatch(/^msig-\d{4}-/);
+describe("download helpers", () => {
+  it("sanitizes", () => {
+    expect(sanitizeFilenamePart("Ops 2of3!")).toBe("ops-2of3");
+  });
+  it("basename includes proposal", () => {
+    const b = exportBasename("msig", "pay1");
+    expect(b.startsWith("msig-pay1-")).toBe(true);
   });
 });

@@ -27,7 +27,22 @@ export function downloadTextFile(
   }
 }
 
-export function exportBasename(prefix = "msig-proposal"): string {
+/** Sanitize proposal name fragment for filenames (a-z0-9._-). */
+export function sanitizeFilenamePart(name: string, max = 24): string {
+  const s = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return (s || "proposal").slice(0, max);
+}
+
+export function exportBasename(
+  prefix = "msig-proposal",
+  proposalName?: string
+): string {
   const d = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-  return `${prefix}-${d}`;
+  const part = proposalName ? `-${sanitizeFilenamePart(proposalName)}` : "";
+  return `${prefix}${part}-${d}`;
 }
