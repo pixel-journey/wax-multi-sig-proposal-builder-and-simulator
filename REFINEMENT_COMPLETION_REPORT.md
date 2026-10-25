@@ -1,23 +1,8 @@
-# Multi-sig builder — frozen through Pass 20
+# Multi-sig builder — through Pass 21
 
 **Trust label:** educational-reference  
 **Updated:** 2026-10-25
 
-| Pass | Delivered |
-|------|-----------|
-| 1–15 | Core freeze (engines, UI, probes, export, WharfKit path) |
-| 16 | `get_info` probe, lifecycle download |
-| 17 | WAX chain-id label, unapprove in lifecycle |
-| 18 | Off-chain notes, optional `proposal_hash` |
-| 19 | Hash validation, single-action copy helpers |
-| **20** | Documentation freeze snapshot |
+Passes **1–20** remain the freeze baseline. **Pass 21** adds base64url share payload encode/decode (`?msig=`) for simulation drafts (not secrets).
 
-**Still true**
-
-- Offline pure simulation + soft-fail chain probes
-- Live propose / approve / unapprove / cancel / exec via host + **WharfKit** `session.transact`
-- No feature removals (clipboard, download, undo, import, RPC presets)
-
-```bash
-npm install && npm test && npm run dev
-```
+Live propose/approve/exec still via host + WharfKit.
