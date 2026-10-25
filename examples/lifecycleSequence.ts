@@ -13,12 +13,17 @@ export function buildLifecycleSketch(input: {
   executer?: string;
   canceler?: string;
   includeCancel?: boolean;
+  /** Only approvers with hasApproved, unless forceAll */
+  forceAllApproves?: boolean;
 }): {
   approve: ChainAction[];
   exec: ChainAction;
   cancel?: ChainAction;
 } {
-  const approve = input.approvals.map((a) =>
+  const list = input.forceAllApproves
+    ? input.approvals
+    : input.approvals.filter((a) => a.hasApproved);
+  const approve = list.map((a) =>
     buildApproveAction({
       proposer: input.proposer,
       proposalName: input.proposalName,
@@ -41,4 +46,10 @@ export function buildLifecycleSketch(input: {
       })
     : undefined;
   return { approve, exec, cancel };
+}
+
+export function lifecycleToJson(
+  sketch: ReturnType<typeof buildLifecycleSketch>
+): string {
+  return JSON.stringify(sketch, null, 2);
 }
