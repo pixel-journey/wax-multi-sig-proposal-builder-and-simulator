@@ -1,4 +1,4 @@
-# Multi-sig builder — status through Pass 10
+# Multi-sig builder — frozen through Pass 15
 
 **Trust label:** educational-reference  
 **Updated:** 2026-10-25
@@ -14,8 +14,19 @@
 | 7 | Approvals table, richer export |
 | 8 | Downloads, approve sequence, permission field |
 | 9 | Undo stack, force-all sequence |
-| **10** | Proposal row normalize/filter, vitest config |
+| 10 | Proposal row normalize/filter, vitest config |
+| 11 | TableRowsPanel UI |
+| 12 | Import draft JSON, pick name from row |
+| 13 | RPC presets, lifecycle helpers |
+| 14 | Lifecycle copy, include cancel, related blueprints |
+| **15** | Freeze documentation snapshot |
 
-**Still true:** pure sim offline; live propose/approve/exec via host + WharfKit `session.transact`.
+**Still true**
 
-**Not removed:** clipboard, downloads, undo, probes, exports.
+- Pure simulation offline
+- Live propose/approve/exec via host + **WharfKit** `session.transact`
+- Features only added (clipboard, download, undo, probes, import/export)
+
+```bash
+npm install && npm test && npm run dev
+```

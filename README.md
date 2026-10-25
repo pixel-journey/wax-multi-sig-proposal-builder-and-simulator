@@ -1,22 +1,21 @@
 # wax-multi-sig-proposal-builder-and-simulator
 
 > **Trust label:** `educational-reference`  
-> **Status:** Passes **1–10**
+> **Status:** Passes **1–15 frozen** (2026-10-25)
 
-Simulate **M-of-N / weighted** multi-sig thresholds, export plans, probe chain tables, and build real **`eosio.msig`** action shapes for **WharfKit** host apps.
+Simulate **M-of-N / weighted** multi-sig thresholds, probe `eosio.msig` tables, export plans, and build real action shapes for **WharfKit** host apps.
 
-## Features
+## Highlights
 
-- Threshold + risks + aggregate risk score
-- Presets, bulk approve/clear, undo stack
-- Validation, localStorage drafts
-- MD / JSON / CSV — copy **and** download
-- `propose` / `approve` / `exec` (+ sequence modes)
-- Soft-fail `get_account` + proposal/approvals table probes + row normalize
+- Threshold + risks + aggregate score; presets; undo; validation
+- MD / JSON / CSV copy **and** download; JSON import
+- `propose` / `approve` / `exec` / `cancel` builders + lifecycle export
+- Soft-fail probes (`get_account`, proposal/approvals tables) with RPC presets
+- Related permission / session-key / offline-queue blueprints
 
 ## Live path
 
-[WHARFKIT.md](./WHARFKIT.md) — install `@wharfkit/session`, serialize inner trx, `session.transact`.
+[WHARFKIT.md](./WHARFKIT.md) · [POLICY.md](./POLICY.md)
 
 ```bash
 npm install && npm test && npm run dev
