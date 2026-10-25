@@ -47,6 +47,7 @@ import {
 import { checkProposalHash } from '../examples/proposalHash';
 import { remainingLine } from '../examples/remainingWeight';
 import { buildShareSearchParam, decodeSharePayload } from '../examples/shareUrl';
+import { sortApprovers } from '../examples/sortApprovers';
 import { PRESETS } from '../examples/presets';
 import {
   buildSingleApprove,
@@ -342,7 +343,7 @@ export default function MultiSigProposalBuilder() {
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
         <div className="text-2xl tracking-widest text-emerald-400 mb-2 font-bold">MULTI-SIG PROPOSAL BUILDER</div>
-        <div className="text-xs opacity-60 mb-2">Pass 27 · equalize weights{!hydrated && ' · hydrating…'}</div>
+        <div className="text-xs opacity-60 mb-2">Pass 28 · sort approvers{!hydrated && ' · hydrating…'}</div>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {PRESETS.map((p) => (
@@ -397,6 +398,8 @@ export default function MultiSigProposalBuilder() {
                 <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(setAllApproved(approvals, true)); }}>approve all</button>
                 <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(clearApprovals(approvals)); }}>clear all</button>
                 <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(equalizeWeights(approvals, 1)); }}>equalize weights</button>
+                <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(sortApprovers(approvals, 'weight-desc')); }}>sort by weight</button>
+                <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(sortApprovers(approvals, 'name-asc')); }}>sort by name</button>
               </div>
               <ul className="space-y-2">
                 {approvals.map((a) => (
