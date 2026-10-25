@@ -74,6 +74,8 @@ export default function MultiSigProposalBuilder() {
   const [rpcBase, setRpcBase] = useState(DEFAULT_RPC);
   const [includeCancel, setIncludeCancel] = useState(false);
   const [includeUnapprove, setIncludeUnapprove] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [proposalHash, setProposalHash] = useState('');
 
   useEffect(() => {
     const d = loadDraft();
@@ -84,6 +86,9 @@ export default function MultiSigProposalBuilder() {
       setApprovals(d.value.config.approvals);
       if (d.value.config.actionSummary)
         setActionSummary(d.value.config.actionSummary);
+      if (d.value.config.notes) setNotes(d.value.config.notes);
+      if (d.value.config.proposalHash)
+        setProposalHash(d.value.config.proposalHash);
       setStatus('Restored draft from localStorage');
     }
     setHydrated(true);
@@ -95,8 +100,10 @@ export default function MultiSigProposalBuilder() {
       threshold,
       approvals,
       actionSummary,
+      notes: notes || undefined,
+      proposalHash: proposalHash || undefined,
     }),
-    [proposalName, threshold, approvals, actionSummary]
+    [proposalName, threshold, approvals, actionSummary, notes, proposalHash]
   );
 
   const snap = useMemo(() => computeThresholdSnapshot(config), [config]);
@@ -120,8 +127,9 @@ export default function MultiSigProposalBuilder() {
         proposalName,
         approvals,
         forceAll: seqMode === 'all',
+        proposalHash: proposalHash || undefined,
       }),
-    [proposer, proposalName, approvals, seqMode]
+    [proposer, proposalName, approvals, seqMode, proposalHash]
   );
 
   const lifecycle = useMemo(
@@ -146,6 +154,8 @@ export default function MultiSigProposalBuilder() {
           threshold,
           approvals,
           actionSummary,
+          notes: notes || undefined,
+          proposalHash: proposalHash || undefined,
         },
       })
     );
@@ -164,6 +174,8 @@ export default function MultiSigProposalBuilder() {
     setApprovals(r.snap.config.approvals);
     if (r.snap.config.actionSummary)
       setActionSummary(r.snap.config.actionSummary);
+    setNotes(r.snap.config.notes ?? '');
+    setProposalHash(r.snap.config.proposalHash ?? '');
     setStatus(`Undid · depth ${undoDepth(r.stack)}`);
   };
 
@@ -193,6 +205,7 @@ export default function MultiSigProposalBuilder() {
           actor: approvals[0].account,
           permission: approvals[0].permission ?? 'active',
         },
+        proposal_hash: proposalHash || undefined,
       });
     const exec = buildExecAction({
       proposer,
@@ -200,7 +213,7 @@ export default function MultiSigProposalBuilder() {
       executer: proposer,
     });
     return { propose, approve, exec, inner, approveSequence: approveSeq };
-  }, [approvals, proposer, proposalName, actionSummary, approveSeq]);
+  }, [approvals, proposer, proposalName, actionSummary, approveSeq, proposalHash]);
 
   const copy = async (text: string, ok: string) => {
     try {
@@ -296,7 +309,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 17 · chain-id check · unapprove lifecycle
+          Pass 18 · notes · proposal_hash
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -334,6 +347,8 @@ export default function MultiSigProposalBuilder() {
             <label className="block text-xs opacity-70">Proposer<input value={proposer} onChange={(e) => setProposer(e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-3 rounded-xl font-mono text-sm" /></label>
             <label className="block text-xs opacity-70">Proposal name (a-z1-5., ≤12)<input value={proposalName} onChange={(e) => setProposalName(e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-3 rounded-xl font-mono text-sm" /></label>
             <label className="block text-xs opacity-70">Action summary<input value={actionSummary} onChange={(e) => setActionSummary(e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-3 rounded-xl text-sm" /></label>
+            <label className="block text-xs opacity-70">Notes (off-chain)<textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="w-full mt-1 bg-black/60 border border-white/10 px-3 py-2 rounded-xl text-sm" /></label>
+            <label className="block text-xs opacity-70">Proposal hash (optional for approve)<input value={proposalHash} onChange={(e) => setProposalHash(e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-2 rounded-xl font-mono text-sm" placeholder="hex hash if required" /></label>
             <label className="block text-xs opacity-70">Threshold weight<input type="number" min={1} value={threshold} onChange={(e) => setThreshold(Number(e.target.value) || 0)} className="w-28 mt-1 bg-black/60 border border-white/10 px-4 py-2 rounded-xl font-mono" /></label>
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -403,6 +418,8 @@ export default function MultiSigProposalBuilder() {
               setThreshold(r.config.threshold);
               setApprovals(r.config.approvals);
               if (r.config.actionSummary) setActionSummary(r.config.actionSummary);
+              setNotes(r.config.notes ?? '');
+              setProposalHash(r.config.proposalHash ?? '');
               setStatus('Imported draft JSON');
             }}>Import JSON</button>
         </section>
