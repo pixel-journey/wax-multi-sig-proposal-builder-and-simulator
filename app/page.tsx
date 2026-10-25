@@ -20,6 +20,11 @@ import {
 } from '../examples/exportPlan';
 import { importDraftJson } from '../examples/importDraft';
 import {
+  buildLifecycleSketch,
+  lifecycleToJson,
+} from '../examples/lifecycleSequence';
+import { RelatedBlueprints } from '../examples/RelatedBlueprints';
+import {
   buildApproveAction,
   buildExecAction,
   buildProposeAction,
@@ -65,6 +70,7 @@ export default function MultiSigProposalBuilder() {
   const [seqMode, setSeqMode] = useState<'checked' | 'all'>('checked');
   const [importText, setImportText] = useState('');
   const [rpcBase, setRpcBase] = useState(DEFAULT_RPC);
+  const [includeCancel, setIncludeCancel] = useState(false);
 
   useEffect(() => {
     const d = loadDraft();
@@ -113,6 +119,18 @@ export default function MultiSigProposalBuilder() {
         forceAll: seqMode === 'all',
       }),
     [proposer, proposalName, approvals, seqMode]
+  );
+
+  const lifecycle = useMemo(
+    () =>
+      buildLifecycleSketch({
+        proposer,
+        proposalName,
+        approvals,
+        forceAllApproves: seqMode === 'all',
+        includeCancel,
+      }),
+    [proposer, proposalName, approvals, seqMode, includeCancel]
   );
 
   const recordUndo = () => {
@@ -263,7 +281,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 13 · RPC presets · lifecycle helpers
+          Pass 14 · lifecycle export · related blueprints
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -278,88 +296,27 @@ export default function MultiSigProposalBuilder() {
               {p.label}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={doUndo}
-            disabled={undoDepth(undo) === 0}
-            className="px-2 py-1 rounded-lg text-xs bg-amber-900 disabled:opacity-40"
-          >
+          <button type="button" onClick={doUndo} disabled={undoDepth(undo) === 0} className="px-2 py-1 rounded-lg text-xs bg-amber-900 disabled:opacity-40">
             Undo ({undoDepth(undo)})
           </button>
-          <button
-            type="button"
-            onClick={persist}
-            className="px-2 py-1 rounded-lg text-xs bg-violet-800"
-          >
-            Save draft
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              clearDraft();
-              setStatus('Draft cleared');
-            }}
-            className="px-2 py-1 rounded-lg text-xs bg-white/10"
-          >
-            Clear storage
-          </button>
-          <button
-            type="button"
-            disabled={probing}
-            onClick={probeProposer}
-            className="px-2 py-1 rounded-lg text-xs bg-sky-900 disabled:opacity-50"
-          >
-            {probing ? 'Probing…' : 'Probe get_account'}
-          </button>
-          <button
-            type="button"
-            disabled={probing}
-            onClick={() => probeTable('proposal')}
-            className="px-2 py-1 rounded-lg text-xs bg-sky-800 disabled:opacity-50"
-          >
-            Probe proposals
-          </button>
-          <button
-            type="button"
-            disabled={probing}
-            onClick={() => probeTable('approvals')}
-            className="px-2 py-1 rounded-lg text-xs bg-sky-700 disabled:opacity-50"
-          >
-            Probe approvals
-          </button>
+          <button type="button" onClick={persist} className="px-2 py-1 rounded-lg text-xs bg-violet-800">Save draft</button>
+          <button type="button" onClick={() => { clearDraft(); setStatus('Draft cleared'); }} className="px-2 py-1 rounded-lg text-xs bg-white/10">Clear storage</button>
+          <button type="button" disabled={probing} onClick={probeProposer} className="px-2 py-1 rounded-lg text-xs bg-sky-900 disabled:opacity-50">{probing ? 'Probing…' : 'Probe get_account'}</button>
+          <button type="button" disabled={probing} onClick={() => probeTable('proposal')} className="px-2 py-1 rounded-lg text-xs bg-sky-800 disabled:opacity-50">Probe proposals</button>
+          <button type="button" disabled={probing} onClick={() => probeTable('approvals')} className="px-2 py-1 rounded-lg text-xs bg-sky-700 disabled:opacity-50">Probe approvals</button>
         </div>
         <div className="flex flex-wrap gap-2 mb-4 items-center text-[10px]">
           <span className="opacity-50">RPC</span>
           {RPC_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`px-2 py-1 rounded-lg ${
-                normalizeRpcBase(rpcBase) === normalizeRpcBase(p.url)
-                  ? 'bg-emerald-800'
-                  : 'bg-white/10'
-              }`}
-              onClick={() => setRpcBase(p.url)}
-            >
-              {p.label}
-            </button>
+            <button key={p.id} type="button" className={`px-2 py-1 rounded-lg ${normalizeRpcBase(rpcBase) === normalizeRpcBase(p.url) ? 'bg-emerald-800' : 'bg-white/10'}`} onClick={() => setRpcBase(p.url)}>{p.label}</button>
           ))}
-          <input
-            value={rpcBase}
-            onChange={(e) => setRpcBase(e.target.value)}
-            className="flex-1 min-w-[12rem] bg-black/60 border border-white/10 rounded px-2 py-1 font-mono"
-          />
+          <input value={rpcBase} onChange={(e) => setRpcBase(e.target.value)} className="flex-1 min-w-[12rem] bg-black/60 border border-white/10 rounded px-2 py-1 font-mono" />
         </div>
 
         {issues.length > 0 && (
           <ul className="mb-4 text-xs space-y-1">
             {issues.map((i, idx) => (
-              <li
-                key={`${i.field}-${idx}`}
-                className={
-                  i.level === 'error' ? 'text-red-400' : 'text-amber-400'
-                }
-              >
+              <li key={`${i.field}-${idx}`} className={i.level === 'error' ? 'text-red-400' : 'text-amber-400'}>
                 [{i.level}] {i.field}: {i.message}
               </li>
             ))}
@@ -369,143 +326,30 @@ export default function MultiSigProposalBuilder() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="border border-white/10 bg-black/40 p-6 rounded-2xl space-y-4">
             <h3 className="text-sm tracking-widest text-emerald-400">BUILD</h3>
-            <label className="block text-xs opacity-70">
-              Proposer
-              <input
-                value={proposer}
-                onChange={(e) => setProposer(e.target.value)}
-                className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-3 rounded-xl font-mono text-sm"
-              />
-            </label>
-            <label className="block text-xs opacity-70">
-              Proposal name (a-z1-5., ≤12)
-              <input
-                value={proposalName}
-                onChange={(e) => setProposalName(e.target.value)}
-                className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-3 rounded-xl font-mono text-sm"
-              />
-            </label>
-            <label className="block text-xs opacity-70">
-              Action summary
-              <input
-                value={actionSummary}
-                onChange={(e) => setActionSummary(e.target.value)}
-                className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-3 rounded-xl text-sm"
-              />
-            </label>
-            <label className="block text-xs opacity-70">
-              Threshold weight
-              <input
-                type="number"
-                min={1}
-                value={threshold}
-                onChange={(e) => setThreshold(Number(e.target.value) || 0)}
-                className="w-28 mt-1 bg-black/60 border border-white/10 px-4 py-2 rounded-xl font-mono"
-              />
-            </label>
-
+            <label className="block text-xs opacity-70">Proposer<input value={proposer} onChange={(e) => setProposer(e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-3 rounded-xl font-mono text-sm" /></label>
+            <label className="block text-xs opacity-70">Proposal name (a-z1-5., ≤12)<input value={proposalName} onChange={(e) => setProposalName(e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-3 rounded-xl font-mono text-sm" /></label>
+            <label className="block text-xs opacity-70">Action summary<input value={actionSummary} onChange={(e) => setActionSummary(e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 px-4 py-3 rounded-xl text-sm" /></label>
+            <label className="block text-xs opacity-70">Threshold weight<input type="number" min={1} value={threshold} onChange={(e) => setThreshold(Number(e.target.value) || 0)} className="w-28 mt-1 bg-black/60 border border-white/10 px-4 py-2 rounded-xl font-mono" /></label>
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className="text-xs opacity-70">Approvers</span>
-                <button
-                  type="button"
-                  className="text-[10px] underline opacity-60"
-                  onClick={() => {
-                    recordUndo();
-                    setApprovals(setAllApproved(approvals, true));
-                  }}
-                >
-                  approve all
-                </button>
-                <button
-                  type="button"
-                  className="text-[10px] underline opacity-60"
-                  onClick={() => {
-                    recordUndo();
-                    setApprovals(clearApprovals(approvals));
-                  }}
-                >
-                  clear all
-                </button>
+                <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(setAllApproved(approvals, true)); }}>approve all</button>
+                <button type="button" className="text-[10px] underline opacity-60" onClick={() => { recordUndo(); setApprovals(clearApprovals(approvals)); }}>clear all</button>
               </div>
               <ul className="space-y-2">
                 {approvals.map((a) => (
-                  <li
-                    key={a.account}
-                    className="flex flex-wrap items-center gap-2 bg-black/40 px-3 py-2 rounded-lg text-sm font-mono"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        recordUndo();
-                        setApprovals(toggleApproval(approvals, a.account));
-                      }}
-                      className={
-                        a.hasApproved ? 'text-emerald-400' : 'text-white/40'
-                      }
-                    >
-                      {a.hasApproved ? '✓' : '○'}
-                    </button>
+                  <li key={a.account} className="flex flex-wrap items-center gap-2 bg-black/40 px-3 py-2 rounded-lg text-sm font-mono">
+                    <button type="button" onClick={() => { recordUndo(); setApprovals(toggleApproval(approvals, a.account)); }} className={a.hasApproved ? 'text-emerald-400' : 'text-white/40'}>{a.hasApproved ? '✓' : '○'}</button>
                     <span className="flex-1 min-w-[6rem]">{a.account}</span>
-                    <input
-                      title="weight"
-                      type="number"
-                      min={1}
-                      value={a.weight}
-                      onChange={(e) =>
-                        setApprovals(
-                          approvals.map((x) =>
-                            x.account === a.account
-                              ? { ...x, weight: Number(e.target.value) || 0 }
-                              : x
-                          )
-                        )
-                      }
-                      className="w-12 bg-black/60 border border-white/10 rounded px-1 py-0.5"
-                    />
-                    <input
-                      title="permission"
-                      value={a.permission ?? 'active'}
-                      onChange={(e) =>
-                        setApprovals(
-                          approvals.map((x) =>
-                            x.account === a.account
-                              ? { ...x, permission: e.target.value }
-                              : x
-                          )
-                        )
-                      }
-                      className="w-16 bg-black/60 border border-white/10 rounded px-1 py-0.5 text-[10px]"
-                    />
-                    <button
-                      type="button"
-                      className="text-red-400 text-xs"
-                      onClick={() => {
-                        recordUndo();
-                        setApprovals(
-                          approvals.filter((x) => x.account !== a.account)
-                        );
-                      }}
-                    >
-                      remove
-                    </button>
+                    <input title="weight" type="number" min={1} value={a.weight} onChange={(e) => setApprovals(approvals.map((x) => x.account === a.account ? { ...x, weight: Number(e.target.value) || 0 } : x))} className="w-12 bg-black/60 border border-white/10 rounded px-1 py-0.5" />
+                    <input title="permission" value={a.permission ?? 'active'} onChange={(e) => setApprovals(approvals.map((x) => x.account === a.account ? { ...x, permission: e.target.value } : x))} className="w-16 bg-black/60 border border-white/10 rounded px-1 py-0.5 text-[10px]" />
+                    <button type="button" className="text-red-400 text-xs" onClick={() => { recordUndo(); setApprovals(approvals.filter((x) => x.account !== a.account)); }}>remove</button>
                   </li>
                 ))}
               </ul>
               <div className="flex gap-2 mt-2">
-                <input
-                  value={newActor}
-                  onChange={(e) => setNewActor(e.target.value)}
-                  placeholder="newaccount"
-                  className="flex-1 bg-black/60 border border-white/10 px-3 py-2 rounded-xl font-mono text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={addApprover}
-                  className="px-3 py-2 rounded-xl bg-white/10 text-sm"
-                >
-                  Add
-                </button>
+                <input value={newActor} onChange={(e) => setNewActor(e.target.value)} placeholder="newaccount" className="flex-1 bg-black/60 border border-white/10 px-3 py-2 rounded-xl font-mono text-sm" />
+                <button type="button" onClick={addApprover} className="px-3 py-2 rounded-xl bg-white/10 text-sm">Add</button>
               </div>
             </div>
           </div>
@@ -513,201 +357,39 @@ export default function MultiSigProposalBuilder() {
           <div className="border border-white/10 bg-black/40 p-6 rounded-2xl space-y-4">
             <h3 className="text-sm tracking-widest text-emerald-400">SIMULATION</h3>
             <div className="text-sm space-y-1 font-mono">
-              <div>
-                Progress:{' '}
-                <span className="text-emerald-400">{snap.progressPercent}%</span> (
-                {snap.approvedWeight}/{snap.threshold})
-              </div>
+              <div>Progress: <span className="text-emerald-400">{snap.progressPercent}%</span> ({snap.approvedWeight}/{snap.threshold})</div>
               <div>Total weight: {snap.totalWeight}</div>
-              <div>
-                Risk score:{' '}
-                <span
-                  className={
-                    riskAgg.label === 'critical' || riskAgg.label === 'high'
-                      ? 'text-red-400'
-                      : riskAgg.label === 'moderate'
-                        ? 'text-amber-400'
-                        : 'text-emerald-400'
-                  }
-                >
-                  {riskAgg.score} ({riskAgg.label})
-                </span>
-              </div>
-              <div>
-                Threshold met:{' '}
-                <span
-                  className={
-                    snap.thresholdMet ? 'text-emerald-400' : 'text-amber-400'
-                  }
-                >
-                  {snap.thresholdMet ? 'yes' : 'no'}
-                </span>
-              </div>
+              <div>Risk score: <span className={riskAgg.label === 'critical' || riskAgg.label === 'high' ? 'text-red-400' : riskAgg.label === 'moderate' ? 'text-amber-400' : 'text-emerald-400'}>{riskAgg.score} ({riskAgg.label})</span></div>
+              <div>Threshold met: <span className={snap.thresholdMet ? 'text-emerald-400' : 'text-amber-400'}>{snap.thresholdMet ? 'yes' : 'no'}</span></div>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 transition-all"
-                style={{ width: `${snap.progressPercent}%` }}
-              />
-            </div>
-            <ul className="text-xs space-y-2">
-              {risks.map((r) => (
-                <li
-                  key={r.id}
-                  className={
-                    r.level === 'high'
-                      ? 'text-red-400'
-                      : r.level === 'medium'
-                        ? 'text-amber-400'
-                        : 'text-emerald-400/80'
-                  }
-                >
-                  [{r.level}] {r.message}
-                </li>
-              ))}
-            </ul>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 transition-all" style={{ width: `${snap.progressPercent}%` }} /></div>
+            <ul className="text-xs space-y-2">{risks.map((r) => (<li key={r.id} className={r.level === 'high' ? 'text-red-400' : r.level === 'medium' ? 'text-amber-400' : 'text-emerald-400/80'}>[{r.level}] {r.message}</li>))}</ul>
             <div className="flex gap-2 text-[10px]">
-              <button
-                type="button"
-                className={`px-2 py-1 rounded ${
-                  seqMode === 'checked' ? 'bg-emerald-800' : 'bg-white/10'
-                }`}
-                onClick={() => setSeqMode('checked')}
-              >
-                Sequence: checked only
-              </button>
-              <button
-                type="button"
-                className={`px-2 py-1 rounded ${
-                  seqMode === 'all' ? 'bg-emerald-800' : 'bg-white/10'
-                }`}
-                onClick={() => setSeqMode('all')}
-              >
-                Sequence: force all
-              </button>
+              <button type="button" className={`px-2 py-1 rounded ${seqMode === 'checked' ? 'bg-emerald-800' : 'bg-white/10'}`} onClick={() => setSeqMode('checked')}>Sequence: checked only</button>
+              <button type="button" className={`px-2 py-1 rounded ${seqMode === 'all' ? 'bg-emerald-800' : 'bg-white/10'}`} onClick={() => setSeqMode('all')}>Sequence: force all</button>
             </div>
-            {approveSeq.length > 0 && (
-              <pre className="text-[10px] opacity-60 whitespace-pre-wrap">
-                {sequenceSummary(approveSeq)}
-              </pre>
-            )}
+            {approveSeq.length > 0 && (<pre className="text-[10px] opacity-60 whitespace-pre-wrap">{sequenceSummary(approveSeq)}</pre>)}
             <div className="flex flex-wrap gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() =>
-                  copy(
-                    exportProposalMarkdown(config, proposer),
-                    'Markdown plan copied'
-                  )
-                }
-                className="px-3 py-2 rounded-xl bg-emerald-800 text-sm"
-              >
-                Copy MD
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  copy(exportProposalJson(config, proposer), 'JSON copied')
-                }
-                className="px-3 py-2 rounded-xl bg-sky-900 text-sm"
-              >
-                Copy JSON
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  copy(exportApproversCsv(config, proposer), 'CSV copied')
-                }
-                className="px-3 py-2 rounded-xl bg-teal-800 text-sm"
-              >
-                Copy CSV
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  copy(
-                    JSON.stringify(actionSketches, null, 2),
-                    'msig actions copied'
-                  )
-                }
-                className="px-3 py-2 rounded-xl bg-indigo-900 text-sm"
-              >
-                Copy msig actions
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const b = exportBasename();
-                  dl(
-                    `${b}.md`,
-                    exportProposalMarkdown(config, proposer),
-                    'text/markdown'
-                  );
-                }}
-                className="px-3 py-2 rounded-xl bg-indigo-800 text-sm"
-              >
-                Download MD
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const b = exportBasename();
-                  dl(
-                    `${b}.json`,
-                    exportProposalJson(config, proposer),
-                    'application/json'
-                  );
-                }}
-                className="px-3 py-2 rounded-xl bg-indigo-700 text-sm"
-              >
-                Download JSON
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const b = exportBasename();
-                  dl(
-                    `${b}.csv`,
-                    exportApproversCsv(config, proposer),
-                    'text/csv'
-                  );
-                }}
-                className="px-3 py-2 rounded-xl bg-indigo-600 text-sm"
-              >
-                Download CSV
-              </button>
+              <button type="button" onClick={() => copy(exportProposalMarkdown(config, proposer), 'Markdown plan copied')} className="px-3 py-2 rounded-xl bg-emerald-800 text-sm">Copy MD</button>
+              <button type="button" onClick={() => copy(exportProposalJson(config, proposer), 'JSON copied')} className="px-3 py-2 rounded-xl bg-sky-900 text-sm">Copy JSON</button>
+              <button type="button" onClick={() => copy(exportApproversCsv(config, proposer), 'CSV copied')} className="px-3 py-2 rounded-xl bg-teal-800 text-sm">Copy CSV</button>
+              <button type="button" onClick={() => copy(JSON.stringify(actionSketches, null, 2), 'msig actions copied')} className="px-3 py-2 rounded-xl bg-indigo-900 text-sm">Copy msig actions</button>
+              <button type="button" onClick={() => copy(lifecycleToJson(lifecycle), 'Lifecycle JSON copied')} className="px-3 py-2 rounded-xl bg-fuchsia-900 text-sm">Copy lifecycle</button>
+              <label className="flex items-center gap-1 text-[10px] opacity-70 px-2"><input type="checkbox" checked={includeCancel} onChange={(e) => setIncludeCancel(e.target.checked)} />include cancel</label>
+              <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.md`, exportProposalMarkdown(config, proposer), 'text/markdown'); }} className="px-3 py-2 rounded-xl bg-indigo-800 text-sm">Download MD</button>
+              <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.json`, exportProposalJson(config, proposer), 'application/json'); }} className="px-3 py-2 rounded-xl bg-indigo-700 text-sm">Download JSON</button>
+              <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.csv`, exportApproversCsv(config, proposer), 'text/csv'); }} className="px-3 py-2 rounded-xl bg-indigo-600 text-sm">Download CSV</button>
             </div>
-            <TableRowsPanel
-              label={tableLabel}
-              rows={tableRows}
-              onPickProposalName={(name) => {
-                recordUndo();
-                setProposalName(name);
-                setStatus(`Loaded proposal name ${name}`);
-              }}
-            />
+            <TableRowsPanel label={tableLabel} rows={tableRows} onPickProposalName={(name) => { recordUndo(); setProposalName(name); setStatus(`Loaded proposal name ${name}`); }} />
           </div>
         </div>
 
         <section className="mt-8 border border-white/10 bg-black/40 p-4 rounded-2xl space-y-2">
-          <p className="text-xs opacity-60">
-            Import draft JSON (export format or {'{'} proposer, config {'}'})
-          </p>
-          <textarea
-            value={importText}
-            onChange={(e) => setImportText(e.target.value)}
-            rows={3}
-            className="w-full font-mono text-[10px] bg-black/60 border border-white/10 rounded-lg p-2"
-          />
-          <button
-            type="button"
-            className="px-3 py-2 rounded-xl text-sm bg-violet-900"
-            onClick={() => {
+          <p className="text-xs opacity-60">Import draft JSON (export format or {'{'} proposer, config {'}'})</p>
+          <textarea value={importText} onChange={(e) => setImportText(e.target.value)} rows={3} className="w-full font-mono text-[10px] bg-black/60 border border-white/10 rounded-lg p-2" />
+          <button type="button" className="px-3 py-2 rounded-xl text-sm bg-violet-900" onClick={() => {
               const r = importDraftJson(importText);
-              if (!r.ok) {
-                setStatus(r.reason);
-                return;
-              }
+              if (!r.ok) { setStatus(r.reason); return; }
               recordUndo();
               setProposer(r.proposer);
               setProposalName(r.config.proposalName);
@@ -715,17 +397,12 @@ export default function MultiSigProposalBuilder() {
               setApprovals(r.config.approvals);
               if (r.config.actionSummary) setActionSummary(r.config.actionSummary);
               setStatus('Imported draft JSON');
-            }}
-          >
-            Import JSON
-          </button>
+            }}>Import JSON</button>
         </section>
 
-        {status && (
-          <p className="mt-6 text-xs text-emerald-200/80" role="status">
-            {status}
-          </p>
-        )}
+        {status && (<p className="mt-6 text-xs text-emerald-200/80" role="status">{status}</p>)}
+
+        <RelatedBlueprints />
       </div>
     </div>
   );
