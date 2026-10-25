@@ -1,8 +1,23 @@
-# Multi-sig builder — through Pass 16
+# Multi-sig builder — frozen through Pass 20
 
 **Trust label:** educational-reference  
 **Updated:** 2026-10-25
 
-Passes **1–15** remain the freeze baseline. **Pass 16** adds soft-fail `get_info` connectivity probe and lifecycle download path in UI wiring.
+| Pass | Delivered |
+|------|-----------|
+| 1–15 | Core freeze (engines, UI, probes, export, WharfKit path) |
+| 16 | `get_info` probe, lifecycle download |
+| 17 | WAX chain-id label, unapprove in lifecycle |
+| 18 | Off-chain notes, optional `proposal_hash` |
+| 19 | Hash validation, single-action copy helpers |
+| **20** | Documentation freeze snapshot |
 
-Live propose/approve/exec still via host + WharfKit.
+**Still true**
+
+- Offline pure simulation + soft-fail chain probes
+- Live propose / approve / unapprove / cancel / exec via host + **WharfKit** `session.transact`
+- No feature removals (clipboard, download, undo, import, RPC presets)
+
+```bash
+npm install && npm test && npm run dev
+```
