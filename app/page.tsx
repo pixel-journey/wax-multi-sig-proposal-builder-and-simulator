@@ -8,6 +8,7 @@ import {
 import { clearApprovals, setAllApproved } from '../examples/bulkApprovals';
 import { probeGetAccount } from '../examples/chainProbe';
 import { chainIdLabel } from '../examples/chainId';
+import { clearShareQuery } from '../examples/clearShareQuery';
 import { exportApproversCsv } from '../examples/csvExport';
 import { downloadTextFile, exportBasename } from '../examples/download';
 import {
@@ -38,6 +39,7 @@ import {
   proposalsByProposerRequest,
 } from '../examples/msigTableProbe';
 import { checkProposalHash } from '../examples/proposalHash';
+import { remainingLine } from '../examples/remainingWeight';
 import { buildShareSearchParam, decodeSharePayload } from '../examples/shareUrl';
 import { PRESETS } from '../examples/presets';
 import {
@@ -97,6 +99,7 @@ export default function MultiSigProposalBuilder() {
           if (shared.config.notes) setNotes(shared.config.notes);
           if (shared.config.proposalHash) setProposalHash(shared.config.proposalHash);
           setStatus('Loaded draft from share URL');
+          clearShareQuery();
           setHydrated(true);
           return;
         }
@@ -332,7 +335,7 @@ export default function MultiSigProposalBuilder() {
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
         <div className="text-2xl tracking-widest text-emerald-400 mb-2 font-bold">MULTI-SIG PROPOSAL BUILDER</div>
-        <div className="text-xs opacity-60 mb-2">Pass 21 · shareable draft URL{!hydrated && ' · hydrating…'}</div>
+        <div className="text-xs opacity-60 mb-2">Pass 22 · remaining weight · clear share query{!hydrated && ' · hydrating…'}</div>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {PRESETS.map((p) => (
@@ -408,6 +411,7 @@ export default function MultiSigProposalBuilder() {
               <div>Total weight: {snap.totalWeight}</div>
               <div>Risk score: <span className={riskAgg.label === 'critical' || riskAgg.label === 'high' ? 'text-red-400' : riskAgg.label === 'moderate' ? 'text-amber-400' : 'text-emerald-400'}>{riskAgg.score} ({riskAgg.label})</span></div>
               <div>Threshold met: <span className={snap.thresholdMet ? 'text-emerald-400' : 'text-amber-400'}>{snap.thresholdMet ? 'yes' : 'no'}</span></div>
+              <div className="text-[11px] opacity-70">{remainingLine(snap)}</div>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 transition-all" style={{ width: `${snap.progressPercent}%` }} /></div>
             <ul className="text-xs space-y-2">{risks.map((r) => (<li key={r.id} className={r.level === 'high' ? 'text-red-400' : r.level === 'medium' ? 'text-amber-400' : 'text-emerald-400/80'}>[{r.level}] {r.message}</li>))}</ul>
