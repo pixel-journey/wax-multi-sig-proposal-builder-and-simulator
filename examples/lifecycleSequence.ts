@@ -2,6 +2,7 @@ import {
   buildApproveAction,
   buildCancelAction,
   buildExecAction,
+  buildUnapproveAction,
   type ChainAction,
 } from "./msigActions";
 import type { Approval } from "./types";
@@ -13,10 +14,11 @@ export function buildLifecycleSketch(input: {
   executer?: string;
   canceler?: string;
   includeCancel?: boolean;
-  /** Only approvers with hasApproved, unless forceAll */
+  includeUnapprove?: boolean;
   forceAllApproves?: boolean;
 }): {
   approve: ChainAction[];
+  unapprove?: ChainAction[];
   exec: ChainAction;
   cancel?: ChainAction;
 } {
@@ -33,6 +35,18 @@ export function buildLifecycleSketch(input: {
       },
     })
   );
+  const unapprove = input.includeUnapprove
+    ? list.map((a) =>
+        buildUnapproveAction({
+          proposer: input.proposer,
+          proposalName: input.proposalName,
+          level: {
+            actor: a.account,
+            permission: a.permission ?? "active",
+          },
+        })
+      )
+    : undefined;
   const exec = buildExecAction({
     proposer: input.proposer,
     proposalName: input.proposalName,
@@ -45,7 +59,7 @@ export function buildLifecycleSketch(input: {
         canceler: input.canceler ?? input.proposer,
       })
     : undefined;
-  return { approve, exec, cancel };
+  return { approve, unapprove, exec, cancel };
 }
 
 export function lifecycleToJson(
