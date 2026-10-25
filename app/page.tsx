@@ -18,6 +18,7 @@ import {
   exportProposalJson,
   exportProposalMarkdown,
 } from '../examples/exportPlan';
+import { probeGetInfo } from '../examples/getInfoProbe';
 import { importDraftJson } from '../examples/importDraft';
 import {
   buildLifecycleSketch,
@@ -274,6 +275,17 @@ export default function MultiSigProposalBuilder() {
     );
   };
 
+  const probeInfo = async () => {
+    setProbing(true);
+    const r = await probeGetInfo(rpcBase);
+    setProbing(false);
+    setStatus(
+      r.ok
+        ? `get_info ok · head ${r.headBlockNum} · chain ${r.chainId.slice(0, 8)}…`
+        : `get_info soft-fail: ${r.reason}`
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
@@ -281,7 +293,7 @@ export default function MultiSigProposalBuilder() {
           MULTI-SIG PROPOSAL BUILDER
         </div>
         <div className="text-xs opacity-60 mb-2">
-          Pass 14 · lifecycle export · related blueprints
+          Pass 16 · get_info probe · lifecycle download
           {!hydrated && ' · hydrating…'}
         </div>
 
@@ -304,6 +316,7 @@ export default function MultiSigProposalBuilder() {
           <button type="button" disabled={probing} onClick={probeProposer} className="px-2 py-1 rounded-lg text-xs bg-sky-900 disabled:opacity-50">{probing ? 'Probing…' : 'Probe get_account'}</button>
           <button type="button" disabled={probing} onClick={() => probeTable('proposal')} className="px-2 py-1 rounded-lg text-xs bg-sky-800 disabled:opacity-50">Probe proposals</button>
           <button type="button" disabled={probing} onClick={() => probeTable('approvals')} className="px-2 py-1 rounded-lg text-xs bg-sky-700 disabled:opacity-50">Probe approvals</button>
+          <button type="button" disabled={probing} onClick={probeInfo} className="px-2 py-1 rounded-lg text-xs bg-cyan-900 disabled:opacity-50">Probe get_info</button>
         </div>
         <div className="flex flex-wrap gap-2 mb-4 items-center text-[10px]">
           <span className="opacity-50">RPC</span>
@@ -379,6 +392,7 @@ export default function MultiSigProposalBuilder() {
               <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.md`, exportProposalMarkdown(config, proposer), 'text/markdown'); }} className="px-3 py-2 rounded-xl bg-indigo-800 text-sm">Download MD</button>
               <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.json`, exportProposalJson(config, proposer), 'application/json'); }} className="px-3 py-2 rounded-xl bg-indigo-700 text-sm">Download JSON</button>
               <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.csv`, exportApproversCsv(config, proposer), 'text/csv'); }} className="px-3 py-2 rounded-xl bg-indigo-600 text-sm">Download CSV</button>
+              <button type="button" onClick={() => { const b = exportBasename('msig-lifecycle'); dl(`${b}.json`, lifecycleToJson(lifecycle), 'application/json'); }} className="px-3 py-2 rounded-xl bg-fuchsia-800 text-sm">Download lifecycle</button>
             </div>
             <TableRowsPanel label={tableLabel} rows={tableRows} onPickProposalName={(name) => { recordUndo(); setProposalName(name); setStatus(`Loaded proposal name ${name}`); }} />
           </div>
