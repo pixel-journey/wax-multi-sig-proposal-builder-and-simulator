@@ -38,6 +38,7 @@ import {
   proposalsByProposerRequest,
 } from '../examples/msigTableProbe';
 import { checkProposalHash } from '../examples/proposalHash';
+import { buildShareSearchParam, decodeSharePayload } from '../examples/shareUrl';
 import { PRESETS } from '../examples/presets';
 import {
   buildSingleApprove,
@@ -83,6 +84,24 @@ export default function MultiSigProposalBuilder() {
   const [proposalHash, setProposalHash] = useState('');
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const q = new URLSearchParams(window.location.search).get('msig');
+      if (q) {
+        const shared = decodeSharePayload(q);
+        if (shared) {
+          setProposer(shared.proposer);
+          setProposalName(shared.config.proposalName);
+          setThreshold(shared.config.threshold);
+          setApprovals(shared.config.approvals);
+          if (shared.config.actionSummary) setActionSummary(shared.config.actionSummary);
+          if (shared.config.notes) setNotes(shared.config.notes);
+          if (shared.config.proposalHash) setProposalHash(shared.config.proposalHash);
+          setStatus('Loaded draft from share URL');
+          setHydrated(true);
+          return;
+        }
+      }
+    }
     const d = loadDraft();
     if (d.ok && d.value) {
       setProposer(d.value.proposer);
@@ -313,7 +332,7 @@ export default function MultiSigProposalBuilder() {
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
         <div className="text-2xl tracking-widest text-emerald-400 mb-2 font-bold">MULTI-SIG PROPOSAL BUILDER</div>
-        <div className="text-xs opacity-60 mb-2">Pass 19 · hash check · single action copy{!hydrated && ' · hydrating…'}</div>
+        <div className="text-xs opacity-60 mb-2">Pass 21 · shareable draft URL{!hydrated && ' · hydrating…'}</div>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {PRESETS.map((p) => (
@@ -321,6 +340,11 @@ export default function MultiSigProposalBuilder() {
           ))}
           <button type="button" onClick={doUndo} disabled={undoDepth(undo) === 0} className="px-2 py-1 rounded-lg text-xs bg-amber-900 disabled:opacity-40">Undo ({undoDepth(undo)})</button>
           <button type="button" onClick={persist} className="px-2 py-1 rounded-lg text-xs bg-violet-800">Save draft</button>
+          <button type="button" onClick={() => {
+            const param = buildShareSearchParam({ proposer, config });
+            const url = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?${param}` : `?${param}`;
+            void copy(url, 'Share URL copied');
+          }} className="px-2 py-1 rounded-lg text-xs bg-emerald-900">Copy share URL</button>
           <button type="button" onClick={() => { clearDraft(); setStatus('Draft cleared'); }} className="px-2 py-1 rounded-lg text-xs bg-white/10">Clear storage</button>
           <button type="button" disabled={probing} onClick={probeProposer} className="px-2 py-1 rounded-lg text-xs bg-sky-900 disabled:opacity-50">{probing ? 'Probing…' : 'Probe get_account'}</button>
           <button type="button" disabled={probing} onClick={() => probeTable('proposal')} className="px-2 py-1 rounded-lg text-xs bg-sky-800 disabled:opacity-50">Probe proposals</button>
