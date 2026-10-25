@@ -335,7 +335,7 @@ export default function MultiSigProposalBuilder() {
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
         <div className="text-2xl tracking-widest text-emerald-400 mb-2 font-bold">MULTI-SIG PROPOSAL BUILDER</div>
-        <div className="text-xs opacity-60 mb-2">Pass 22 · remaining weight · clear share query{!hydrated && ' · hydrating…'}</div>
+        <div className="text-xs opacity-60 mb-2">Pass 23 · proposal-aware export names{!hydrated && ' · hydrating…'}</div>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {PRESETS.map((p) => (
@@ -442,10 +442,10 @@ export default function MultiSigProposalBuilder() {
               <button type="button" onClick={() => copy(lifecycleToJson(lifecycle), 'Lifecycle JSON copied')} className="px-3 py-2 rounded-xl bg-fuchsia-900 text-sm">Copy lifecycle</button>
               <label className="flex items-center gap-1 text-[10px] opacity-70 px-2"><input type="checkbox" checked={includeCancel} onChange={(e) => setIncludeCancel(e.target.checked)} />include cancel</label>
               <label className="flex items-center gap-1 text-[10px] opacity-70 px-2"><input type="checkbox" checked={includeUnapprove} onChange={(e) => setIncludeUnapprove(e.target.checked)} />include unapprove</label>
-              <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.md`, exportProposalMarkdown(config, proposer), 'text/markdown'); }} className="px-3 py-2 rounded-xl bg-indigo-800 text-sm">Download MD</button>
-              <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.json`, exportProposalJson(config, proposer), 'application/json'); }} className="px-3 py-2 rounded-xl bg-indigo-700 text-sm">Download JSON</button>
-              <button type="button" onClick={() => { const b = exportBasename(); dl(`${b}.csv`, exportApproversCsv(config, proposer), 'text/csv'); }} className="px-3 py-2 rounded-xl bg-indigo-600 text-sm">Download CSV</button>
-              <button type="button" onClick={() => { const b = exportBasename('msig-lifecycle'); dl(`${b}.json`, lifecycleToJson(lifecycle), 'application/json'); }} className="px-3 py-2 rounded-xl bg-fuchsia-800 text-sm">Download lifecycle</button>
+              <button type="button" onClick={() => { const b = exportBasename('msig-proposal', proposalName); dl(`${b}.md`, exportProposalMarkdown(config, proposer), 'text/markdown'); }} className="px-3 py-2 rounded-xl bg-indigo-800 text-sm">Download MD</button>
+              <button type="button" onClick={() => { const b = exportBasename('msig-proposal', proposalName); dl(`${b}.json`, exportProposalJson(config, proposer), 'application/json'); }} className="px-3 py-2 rounded-xl bg-indigo-700 text-sm">Download JSON</button>
+              <button type="button" onClick={() => { const b = exportBasename('msig-proposal', proposalName); dl(`${b}.csv`, exportApproversCsv(config, proposer), 'text/csv'); }} className="px-3 py-2 rounded-xl bg-indigo-600 text-sm">Download CSV</button>
+              <button type="button" onClick={() => { const b = exportBasename('msig-lifecycle', proposalName); dl(`${b}.json`, lifecycleToJson(lifecycle), 'application/json'); }} className="px-3 py-2 rounded-xl bg-fuchsia-800 text-sm">Download lifecycle</button>
             </div>
             <TableRowsPanel label={tableLabel} rows={tableRows} onPickProposalName={(name) => { recordUndo(); setProposalName(name); setStatus(`Loaded proposal name ${name}`); }} />
           </div>
