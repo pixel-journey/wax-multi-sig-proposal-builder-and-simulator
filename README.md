@@ -1,18 +1,15 @@
 # wax-multi-sig-proposal-builder-and-simulator
 
 > **Trust label:** `educational-reference`  
-> **Status:** Passes **1–30** freeze + **31–34** live tier; wallets trimmed to **Anchor + Cloud Wallet** only
+> **Status:** **Complete** for educational scope (Passes **1–35**, 2026-10-26)
 
-Simulate **M-of-N / weighted** multi-sig, probe `eosio.msig`, and optionally broadcast with packed multi-action trx via **WharfKit**.
+Simulate **M-of-N / weighted** multi-sig, probe `eosio.msig`, pack real inner transactions, and optionally broadcast with **WharfKit** (**Anchor** + **My Cloud Wallet** only).
 
-## Recommended wallets
+## Docs
 
-- **Anchor**
-- **My Cloud Wallet**
-
-No abandoned / sold-off wallet plugins.
-
-[WHARFKIT.md](./WHARFKIT.md) · [POLICY.md](./POLICY.md)
+- [WHARFKIT.md](./WHARFKIT.md) — live session + pack pipeline  
+- [examples/EDUCATION.md](./examples/EDUCATION.md) — account multi-sig vs `eosio.msig`  
+- [POLICY.md](./POLICY.md) · [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ```bash
 npm install && npm test && npm run dev

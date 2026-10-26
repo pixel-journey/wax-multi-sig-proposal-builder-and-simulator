@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   buildApproveAction,
   buildCancelAction,
@@ -13,6 +13,7 @@ import { transactSimpleAction } from './proposeTrx';
 import {
   actorString,
   createWaxSessionKit,
+  type SessionKitLike,
   type SessionLike,
 } from './sessionKit';
 import { DEFAULT_RPC } from './rpcEndpoints';
@@ -32,6 +33,7 @@ const SAMPLE_MULTI = `[\n  {\n    "account": "eosio.token",\n    "name": "transf
 
 export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   const [session, setSession] = useState<SessionLike | null>(null);
+  const [kit, setKit] = useState<SessionKitLike | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -50,23 +52,60 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     memo: props.actionSummary ?? 'msig educational',
   };
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const r = await createWaxSessionKit();
+      if (cancelled || !r.ok) return;
+      setKit(r.kit);
+      setWallets(r.wallets);
+      try {
+        const restored = await r.kit.restore();
+        if (!cancelled && restored) {
+          setSession(restored);
+          setStatus(`Restored session as ${actorString(restored)}`);
+        }
+      } catch {
+        /* no prior session */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const login = async () => {
     setBusy(true);
-    const r = await createWaxSessionKit();
-    if (!r.ok) {
-      setStatus(r.reason);
-      setBusy(false);
-      return;
+    let active = kit;
+    if (!active) {
+      const r = await createWaxSessionKit();
+      if (!r.ok) {
+        setStatus(r.reason);
+        setBusy(false);
+        return;
+      }
+      active = r.kit;
+      setKit(r.kit);
+      setWallets(r.wallets);
     }
-    setWallets(r.wallets);
     try {
-      const { session: s } = await r.kit.login();
+      const { session: s } = await active.login();
       setSession(s);
-      setStatus(`Logged in as ${actorString(s)} · wallets: ${r.wallets.join(', ')}`);
+      setStatus(`Logged in as ${actorString(s)} · wallets: ${wallets.join(', ') || 'anchor'}`);
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'login failed');
     }
     setBusy(false);
+  };
+
+  const logout = async () => {
+    try {
+      await kit?.logout();
+    } catch {
+      /* ignore */
+    }
+    setSession(null);
+    setStatus('Logged out');
   };
 
   const packNow = async () => {
@@ -195,6 +234,16 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
             ? `Session: ${actorString(session)}`
             : 'Login (Anchor / Cloud Wallet)'}
         </button>
+        {session && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void logout()}
+            className="px-3 py-2 rounded-xl text-sm bg-white/10 disabled:opacity-50"
+          >
+            Logout
+          </button>
+        )}
         <button
           type="button"
           disabled={busy}

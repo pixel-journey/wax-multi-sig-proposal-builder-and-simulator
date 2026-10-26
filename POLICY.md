@@ -1,7 +1,14 @@
 # Policy
 
-**Threshold simulator** is pure math (safe offline).
+**Threshold / risk engines** are pure math (safe offline, unit-tested).
 
-**Live multi-sig** on WAX uses `eosio.msig` (propose / approve / exec) with a real **WharfKit** session — that path is **in scope** for host apps. See `examples/wharfPropose.sketch.ts`.
+**Live multi-sig** uses native `eosio.msig` (propose / approve / unapprove / cancel / exec) with a real **WharfKit** `session.transact` path in `LiveExecutionPanel`.
 
-We do **not** silently broadcast from unit tests or the pure engine. We **do** document and test the `session.transact` call boundary so examples are real, not theatre.
+Rules:
+
+- No silent broadcast from unit tests or pure engines.
+- Every live step requires an explicit confirm checkbox.
+- Wallets: **Anchor** and **My Cloud Wallet** only (no abandoned plugins).
+- Propose packs inner `trx` via TAPOS + ABI (`packProposeActions`); approve may attach `proposal_hash`.
+
+See [WHARFKIT.md](./WHARFKIT.md).
