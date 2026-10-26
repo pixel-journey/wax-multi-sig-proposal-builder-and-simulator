@@ -1,22 +1,19 @@
 # wax-multi-sig-proposal-builder-and-simulator
 
 > **Trust label:** `educational-reference`  
-> **Status:** Passes **1–30 frozen** (2026-10-26)
+> **Status:** Passes **1–30** freeze + **Pass 31** live WharfKit tier (2026-10-26)
 
-Simulate **M-of-N / weighted** multi-sig thresholds, probe `eosio.msig` tables, share drafts via URL, validate hashes and threshold feasibility, and build real action shapes for **WharfKit** host apps.
+Simulate **M-of-N / weighted** multi-sig thresholds, probe `eosio.msig` tables, and optionally **login + broadcast** guarded steps via **WharfKit**.
 
 ## Highlights
 
-- Threshold tools: majority / ~2/3 suggest, remaining weight, impossible-threshold notice
-- Approver tools: equalize weights, sort, normalize permissions, bulk approve/clear
-- MD / JSON / CSV / lifecycle copy **and** download; JSON import; notes; share URL
-- `propose` / `approve` / `unapprove` / `exec` / `cancel` (+ single-action copy)
-- Soft-fail probes (`get_info`, `get_account`, tables) with RPC presets + WAX chain-id
-- Optional `proposal_hash` with hex validation
+- Offline: threshold tools, risk, share URL, exports, table probes
+- Live (guarded): Anchor login, confirm-required propose / approve / exec / cancel
+- Action builders for real `eosio.msig` payload shapes
 
-## Live path
+## Docs
 
-[WHARFKIT.md](./WHARFKIT.md) · [POLICY.md](./POLICY.md)
+[WHARFKIT.md](./WHARFKIT.md) · [POLICY.md](./POLICY.md) · [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ```bash
 npm install && npm test && npm run dev

@@ -1,13 +1,13 @@
 # Verification Log
 
 **Trust label:** educational-reference  
-**Updated:** 2026-10-26 (Pass 30 freeze)
+**Updated:** 2026-10-26 (Pass 31 next tier)
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Engines under `examples/` | unit | vitest |
-| UI through Pass 29 | demo app | verified by construction |
-| Live mainnet wallet broadcast | host + WharfKit | example path — not CI-executed |
+| Pass 1–30 freeze | docs | REFINEMENT_COMPLETION_REPORT.md |
+| propose envelope unit | **verified** | proposeTrx.test.ts |
+| Live session.transact | host + wallet | LiveExecutionPanel — not CI-executed |
 
 ```bash
 npm install && npm test

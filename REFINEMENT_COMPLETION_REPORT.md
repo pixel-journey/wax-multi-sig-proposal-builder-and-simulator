@@ -1,24 +1,19 @@
-# Multi-sig builder — frozen through Pass 30
+# Multi-sig builder — through Pass 31 (next tier)
 
 **Trust label:** educational-reference  
 **Updated:** 2026-10-26
 
+Passes **1–30** remain the simulation freeze baseline.
+
 | Pass | Delivered |
 |------|-----------|
-| 1–15 | Core freeze (engines, UI, probes, export, WharfKit) |
-| 16–20 | get_info, chain-id, notes/hash, single actions |
-| 21–25 | Share URL, remaining weight, export names, feasibility, freeze |
-| 26 | Majority / ~2/3 threshold suggestions |
-| 27 | Equalize approver weights |
-| 28 | Sort approvers (weight / name) |
-| 29 | Normalize permissions + copy 1st unapprove |
-| **30** | Documentation freeze snapshot |
+| **31** | WharfKit deps, `sessionKit`, `proposeTrx`, guarded `LiveExecutionPanel` |
 
 **Still true**
 
-- Offline pure simulation + soft-fail chain probes
-- Live propose / approve / unapprove / cancel / exec via host + **WharfKit** `session.transact`
-- No feature removals
+- Offline simulation unchanged
+- Live broadcast only after explicit confirm checkbox
+- Propose may still need full packed-trx serialization for reliable mainnet accept
 
 ```bash
 npm install && npm test && npm run dev
