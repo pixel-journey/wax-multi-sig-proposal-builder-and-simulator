@@ -7,7 +7,7 @@ import {
   buildExecAction,
   type ChainAction,
 } from './msigActions';
-import { packProposeActions, packProposeTransfer } from './packProposeTrx';
+import { packProposeActions } from './packProposeTrx';
 import { parseInnerActionsJson } from './parseInnerActions';
 import { transactSimpleAction } from './proposeTrx';
 import {
@@ -72,14 +72,13 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   const packNow = async () => {
     const parsed = parseInnerActionsJson(innerJson, fallbackTransfer);
     if (!parsed.ok) return parsed;
-    const packed = await packProposeActions({
+    return packProposeActions({
       proposer: props.proposer,
       proposalName: props.proposalName,
       requested: props.requested,
       rpcBase: props.rpcBase ?? DEFAULT_RPC,
       actions: parsed.actions,
     });
-    return packed;
   };
 
   const run = async () => {
@@ -165,7 +164,8 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     >
       <h3 className="text-sm tracking-widest text-amber-400">LIVE WHARFKIT (GUARDED)</h3>
       <p className="text-[11px] opacity-70">
-        Anchor / Cloud Wallet / Wombat when installed. Empty inner JSON → single transfer; or paste multi-action array.
+        Recommended wallets: <strong>Anchor</strong> and <strong>My Cloud Wallet</strong> only.
+        Empty inner JSON → single transfer; or paste a multi-action array.
       </p>
       <label className="block text-[10px] opacity-70">
         Inner actions JSON (optional multi-action)
@@ -193,7 +193,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
         >
           {session
             ? `Session: ${actorString(session)}`
-            : 'Login (Anchor / Cloud / Wombat)'}
+            : 'Login (Anchor / Cloud Wallet)'}
         </button>
         <button
           type="button"

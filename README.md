@@ -1,16 +1,16 @@
 # wax-multi-sig-proposal-builder-and-simulator
 
 > **Trust label:** `educational-reference`  
-> **Status:** Passes **1–30** freeze + **31–34** live WharfKit tier (2026-10-26)
+> **Status:** Passes **1–30** freeze + **31–34** live tier; wallets trimmed to **Anchor + Cloud Wallet** only
 
-Simulate **M-of-N / weighted** multi-sig, probe `eosio.msig`, and optionally broadcast with **packed multi-action trx** via WharfKit (**Anchor / Cloud Wallet / Wombat**).
+Simulate **M-of-N / weighted** multi-sig, probe `eosio.msig`, and optionally broadcast with packed multi-action trx via **WharfKit**.
 
-## Live tier
+## Recommended wallets
 
-- Multi-wallet SessionKit login
-- Confirm-required propose / approve / exec / cancel
-- Inner actions JSON editor (or single-transfer fallback)
-- TAPOS + per-contract ABI packing + `proposal_hash`
+- **Anchor**
+- **My Cloud Wallet**
+
+No abandoned / sold-off wallet plugins.
 
 [WHARFKIT.md](./WHARFKIT.md) · [POLICY.md](./POLICY.md)
 

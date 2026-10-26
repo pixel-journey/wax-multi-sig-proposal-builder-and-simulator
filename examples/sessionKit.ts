@@ -1,6 +1,7 @@
 /**
  * WharfKit SessionKit factory for WAX mainnet.
- * Anchor + Cloud Wallet + Wombat (optional peers).
+ * Recommended wallets only: Anchor + My Cloud Wallet.
+ * (Do not add abandoned / sold-off wallet plugins.)
  */
 
 import { WAX_MAINNET_CHAIN_ID } from "./chainId";
@@ -53,17 +54,7 @@ export async function createWaxSessionKit(appName = "pxj-msig-builder"): Promise
       );
       wallets.push("cloudwallet");
     } catch {
-      /* optional */
-    }
-
-    try {
-      const { WalletPluginWombat } = await import(
-        "@wharfkit/wallet-plugin-wombat"
-      );
-      walletPlugins.push(new WalletPluginWombat());
-      wallets.push("wombat");
-    } catch {
-      /* optional / may be deprecated upstream */
+      /* Cloud Wallet plugin optional if install failed */
     }
 
     const kit = new SessionKit({

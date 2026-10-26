@@ -1,22 +1,18 @@
 # WharfKit + eosio.msig
 
-**Trust label:** educational-reference  
-**Tier:** multi-wallet + multi-action editor (Pass 34+)
+**Trust label:** educational-reference
 
-## Wallets (optional peers)
+## Recommended wallets (only)
 
-- Anchor
-- My Cloud Wallet
-- Wombat (package may be older/deprecated upstream — loaded if install succeeds)
+| Wallet | Plugin |
+|--------|--------|
+| **Anchor** | `@wharfkit/wallet-plugin-anchor` |
+| **My Cloud Wallet** | `@wharfkit/wallet-plugin-cloudwallet` |
 
-## Inner actions
-
-- Empty JSON → single `eosio.token::transfer` fallback
-- Or paste a JSON **array** of plain actions → `packProposeActions`
-- Sample loader: 2× transfer in the live panel
+Do **not** wire abandoned or sold-off wallets (e.g. former Wombat stacks). Prefer current, maintained options only.
 
 ## Pack pipeline
 
 `get_info` TAPOS → per-account `get_abi` → `Action.from` × N → `Transaction` → `propose.data.trx` + optional `proposal_hash`
 
-Prefer **WharfKit** over eosjs / Anchor Link-only stacks.
+Prefer **WharfKit Session** over eosjs / Anchor Link-only stacks for new WAX dApps.
