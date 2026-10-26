@@ -1,13 +1,13 @@
 # Verification Log
 
 **Trust label:** educational-reference  
-**Updated:** 2026-10-25 (Pass 29)
+**Updated:** 2026-10-26 (Pass 30 freeze)
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Pass 1–28 | prior | — |
-| normalizePermissions | **verified** | normalizePermissions.test.ts |
-| Live msig broadcast | host + WharfKit | WHARFKIT.md |
+| Engines under `examples/` | unit | vitest |
+| UI through Pass 29 | demo app | verified by construction |
+| Live mainnet wallet broadcast | host + WharfKit | example path — not CI-executed |
 
 ```bash
 npm install && npm test
