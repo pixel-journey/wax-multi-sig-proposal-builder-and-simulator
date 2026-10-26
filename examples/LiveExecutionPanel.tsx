@@ -7,7 +7,8 @@ import {
   buildExecAction,
   type ChainAction,
 } from './msigActions';
-import { packProposeTransfer } from './packProposeTrx';
+import { packProposeActions, packProposeTransfer } from './packProposeTrx';
+import { parseInnerActionsJson } from './parseInnerActions';
 import { transactSimpleAction } from './proposeTrx';
 import {
   actorString,
@@ -27,6 +28,8 @@ export type LiveExecutionPanelProps = {
   className?: string;
 };
 
+const SAMPLE_MULTI = `[\n  {\n    "account": "eosio.token",\n    "name": "transfer",\n    "authorization": [{ "actor": "alice.wam", "permission": "active" }],\n    "data": {\n      "from": "alice.wam",\n      "to": "bob.wam",\n      "quantity": "0.00000001 WAX",\n      "memo": "msig-a"\n    }\n  },\n  {\n    "account": "eosio.token",\n    "name": "transfer",\n    "data": {\n      "from": "alice.wam",\n      "to": "carol.wam",\n      "quantity": "0.00000001 WAX",\n      "memo": "msig-b"\n    }\n  }\n]`;
+
 export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   const [session, setSession] = useState<SessionLike | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -38,6 +41,14 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   const [lastTrxPreview, setLastTrxPreview] = useState<string | null>(null);
   const [proposalHash, setProposalHash] = useState<string | undefined>();
   const [wallets, setWallets] = useState<string[]>([]);
+  const [innerJson, setInnerJson] = useState('');
+
+  const fallbackTransfer = {
+    from: props.proposer,
+    to: props.transferTo ?? 'bob.wam',
+    quantity: props.transferQuantity ?? '0.00000001 WAX',
+    memo: props.actionSummary ?? 'msig educational',
+  };
 
   const login = async () => {
     setBusy(true);
@@ -58,6 +69,19 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     setBusy(false);
   };
 
+  const packNow = async () => {
+    const parsed = parseInnerActionsJson(innerJson, fallbackTransfer);
+    if (!parsed.ok) return parsed;
+    const packed = await packProposeActions({
+      proposer: props.proposer,
+      proposalName: props.proposalName,
+      requested: props.requested,
+      rpcBase: props.rpcBase ?? DEFAULT_RPC,
+      actions: parsed.actions,
+    });
+    return packed;
+  };
+
   const run = async () => {
     if (!session) {
       setStatus('Login with WharfKit first');
@@ -71,18 +95,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     let action: ChainAction;
 
     if (step === 'propose') {
-      const packed = await packProposeTransfer({
-        proposer: props.proposer,
-        proposalName: props.proposalName,
-        requested: props.requested,
-        rpcBase: props.rpcBase ?? DEFAULT_RPC,
-        inner: {
-          from: props.proposer,
-          to: props.transferTo ?? 'bob.wam',
-          quantity: props.transferQuantity ?? '0.00000001 WAX',
-          memo: props.actionSummary ?? 'msig educational',
-        },
-      });
+      const packed = await packNow();
       if (!packed.ok) {
         setStatus(`pack propose soft-fail: ${packed.reason}`);
         setBusy(false);
@@ -133,18 +146,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
 
   const previewPack = async () => {
     setBusy(true);
-    const packed = await packProposeTransfer({
-      proposer: props.proposer,
-      proposalName: props.proposalName,
-      requested: props.requested,
-      rpcBase: props.rpcBase ?? DEFAULT_RPC,
-      inner: {
-        from: props.proposer,
-        to: props.transferTo ?? 'bob.wam',
-        quantity: props.transferQuantity ?? '0.00000001 WAX',
-        memo: props.actionSummary ?? 'msig educational',
-      },
-    });
+    const packed = await packNow();
     setBusy(false);
     if (!packed.ok) {
       setStatus(`pack preview soft-fail: ${packed.reason}`);
@@ -163,8 +165,25 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     >
       <h3 className="text-sm tracking-widest text-amber-400">LIVE WHARFKIT (GUARDED)</h3>
       <p className="text-[11px] opacity-70">
-        Anchor + Cloud Wallet when installed. Propose packs multi-ABI TAPOS trx; approve may attach proposal_hash.
+        Anchor / Cloud Wallet / Wombat when installed. Empty inner JSON → single transfer; or paste multi-action array.
       </p>
+      <label className="block text-[10px] opacity-70">
+        Inner actions JSON (optional multi-action)
+        <textarea
+          value={innerJson}
+          onChange={(e) => setInnerJson(e.target.value)}
+          rows={6}
+          placeholder="[] = use single transfer fallback"
+          className="w-full mt-1 font-mono text-[10px] bg-black/60 border border-white/10 rounded-lg p-2"
+        />
+      </label>
+      <button
+        type="button"
+        className="text-[10px] underline opacity-70"
+        onClick={() => setInnerJson(SAMPLE_MULTI)}
+      >
+        load sample 2× transfer
+      </button>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -174,7 +193,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
         >
           {session
             ? `Session: ${actorString(session)}`
-            : 'Login (Anchor / Cloud Wallet)'}
+            : 'Login (Anchor / Cloud / Wombat)'}
         </button>
         <button
           type="button"

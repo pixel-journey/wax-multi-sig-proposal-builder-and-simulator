@@ -1,27 +1,22 @@
 # WharfKit + eosio.msig
 
 **Trust label:** educational-reference  
-**Tier:** packed multi-action propose + multi-wallet (Pass 33+)
+**Tier:** multi-wallet + multi-action editor (Pass 34+)
 
-## Wallets
+## Wallets (optional peers)
 
-SessionKit loads:
+- Anchor
+- My Cloud Wallet
+- Wombat (package may be older/deprecated upstream — loaded if install succeeds)
 
-- `@wharfkit/wallet-plugin-anchor`
-- `@wharfkit/wallet-plugin-cloudwallet` (optional if install succeeds)
+## Inner actions
 
-## Propose packing
+- Empty JSON → single `eosio.token::transfer` fallback
+- Or paste a JSON **array** of plain actions → `packProposeActions`
+- Sample loader: 2× transfer in the live panel
 
-`packProposeActions` / `packProposeTransfer`:
+## Pack pipeline
 
-1. `get_info` → TAPOS header  
-2. `get_abi` per contract account  
-3. `Action.from` × N  
-4. `Transaction.from` → `Serializer.objectify` → `propose.data.trx`  
-5. Optional `proposal_hash` from transaction id (64-hex) for later `approve`
-
-## Live path
-
-Login → preview pack (optional) → confirm → broadcast step.
+`get_info` TAPOS → per-account `get_abi` → `Action.from` × N → `Transaction` → `propose.data.trx` + optional `proposal_hash`
 
 Prefer **WharfKit** over eosjs / Anchor Link-only stacks.
