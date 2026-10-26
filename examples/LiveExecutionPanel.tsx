@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   buildApproveAction,
   buildCancelAction,
   buildExecAction,
   type ChainAction,
 } from './msigActions';
-import { packProposeActions } from './packProposeTrx';
-import { parseInnerActionsJson } from './parseInnerActions';
+import { InnerActionsForm } from './InnerActionsForm';
+import {
+  packProposeActions,
+  transferToPlainAction,
+  type PlainInnerAction,
+} from './packProposeTrx';
 import { transactSimpleAction } from './proposeTrx';
 import {
   actorString,
@@ -29,8 +33,6 @@ export type LiveExecutionPanelProps = {
   className?: string;
 };
 
-const SAMPLE_MULTI = `[\n  {\n    "account": "eosio.token",\n    "name": "transfer",\n    "authorization": [{ "actor": "alice.wam", "permission": "active" }],\n    "data": {\n      "from": "alice.wam",\n      "to": "bob.wam",\n      "quantity": "0.00000001 WAX",\n      "memo": "msig-a"\n    }\n  },\n  {\n    "account": "eosio.token",\n    "name": "transfer",\n    "data": {\n      "from": "alice.wam",\n      "to": "carol.wam",\n      "quantity": "0.00000001 WAX",\n      "memo": "msig-b"\n    }\n  }\n]`;
-
 export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   const [session, setSession] = useState<SessionLike | null>(null);
   const [kit, setKit] = useState<SessionKitLike | null>(null);
@@ -43,14 +45,27 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   const [lastTrxPreview, setLastTrxPreview] = useState<string | null>(null);
   const [proposalHash, setProposalHash] = useState<string | undefined>();
   const [wallets, setWallets] = useState<string[]>([]);
+  const [useAdvancedJson, setUseAdvancedJson] = useState(false);
   const [innerJson, setInnerJson] = useState('');
 
-  const fallbackTransfer = {
-    from: props.proposer,
-    to: props.transferTo ?? 'bob.wam',
-    quantity: props.transferQuantity ?? '0.00000001 WAX',
-    memo: props.actionSummary ?? 'msig educational',
-  };
+  const defaultActions = useMemo(
+    (): PlainInnerAction[] => [
+      transferToPlainAction({
+        from: props.proposer,
+        to: props.transferTo ?? 'bob.wam',
+        quantity: props.transferQuantity ?? '0.00000001 WAX',
+        memo: props.actionSummary ?? 'msig educational',
+      }),
+    ],
+    [props.proposer, props.transferTo, props.transferQuantity, props.actionSummary]
+  );
+
+  const [formActions, setFormActions] =
+    useState<PlainInnerAction[]>(defaultActions);
+
+  useEffect(() => {
+    setFormActions(defaultActions);
+  }, [defaultActions]);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +89,31 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     };
   }, []);
 
+  const resolveActions = ():
+    | { ok: true; actions: PlainInnerAction[] }
+    | { ok: false; reason: string } => {
+    if (!useAdvancedJson) {
+      if (!formActions.length) {
+        return { ok: false, reason: 'add at least one inner action' };
+      }
+      return { ok: true, actions: formActions };
+    }
+    const trimmed = innerJson.trim();
+    if (!trimmed) return { ok: true, actions: defaultActions };
+    try {
+      const parsed = JSON.parse(trimmed) as PlainInnerAction[];
+      if (!Array.isArray(parsed) || !parsed.length) {
+        return { ok: false, reason: 'JSON must be a non-empty action array' };
+      }
+      return { ok: true, actions: parsed };
+    } catch (e) {
+      return {
+        ok: false,
+        reason: e instanceof Error ? e.message : 'invalid JSON',
+      };
+    }
+  };
+
   const login = async () => {
     setBusy(true);
     let active = kit;
@@ -91,7 +131,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     try {
       const { session: s } = await active.login();
       setSession(s);
-      setStatus(`Logged in as ${actorString(s)} · wallets: ${wallets.join(', ') || 'anchor'}`);
+      setStatus(`Logged in as ${actorString(s)}`);
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'login failed');
     }
@@ -109,14 +149,14 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   };
 
   const packNow = async () => {
-    const parsed = parseInnerActionsJson(innerJson, fallbackTransfer);
-    if (!parsed.ok) return parsed;
+    const resolved = resolveActions();
+    if (!resolved.ok) return resolved;
     return packProposeActions({
       proposer: props.proposer,
       proposalName: props.proposalName,
       requested: props.requested,
       rpcBase: props.rpcBase ?? DEFAULT_RPC,
-      actions: parsed.actions,
+      actions: resolved.actions,
     });
   };
 
@@ -145,17 +185,12 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
       setLastTrxPreview(
         JSON.stringify(packed.trxObject, null, 2).slice(0, 1200)
       );
-      setStatus(
-        packed.proposalHash
-          ? `Packed · proposal_hash ${packed.proposalHash.slice(0, 16)}… — broadcasting propose…`
-          : 'Packed inner trx — broadcasting propose…'
-      );
+      setStatus('Packed inner trx — broadcasting propose…');
     } else if (step === 'approve') {
-      const actor = actorString(session);
       action = buildApproveAction({
         proposer: props.proposer,
         proposalName: props.proposalName,
-        level: { actor, permission: 'active' },
+        level: { actor: actorString(session), permission: 'active' },
         proposal_hash: proposalHash,
       });
     } else if (step === 'exec') {
@@ -203,26 +238,34 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     >
       <h3 className="text-sm tracking-widest text-amber-400">LIVE WHARFKIT (GUARDED)</h3>
       <p className="text-[11px] opacity-70">
-        Recommended wallets: <strong>Anchor</strong> and <strong>My Cloud Wallet</strong> only.
-        Empty inner JSON → single transfer; or paste a multi-action array.
+        Recommended: <strong>Anchor</strong> + <strong>My Cloud Wallet</strong>. Confirm required before any broadcast.
       </p>
-      <label className="block text-[10px] opacity-70">
-        Inner actions JSON (optional multi-action)
-        <textarea
-          value={innerJson}
-          onChange={(e) => setInnerJson(e.target.value)}
-          rows={6}
-          placeholder="[] = use single transfer fallback"
-          className="w-full mt-1 font-mono text-[10px] bg-black/60 border border-white/10 rounded-lg p-2"
+
+      {!useAdvancedJson ? (
+        <InnerActionsForm
+          proposer={props.proposer}
+          actions={formActions}
+          onChange={setFormActions}
         />
-      </label>
+      ) : (
+        <label className="block text-[10px] opacity-70">
+          Inner actions JSON
+          <textarea
+            value={innerJson}
+            onChange={(e) => setInnerJson(e.target.value)}
+            rows={6}
+            className="w-full mt-1 font-mono text-[10px] bg-black/60 border border-white/10 rounded-lg p-2"
+          />
+        </label>
+      )}
       <button
         type="button"
         className="text-[10px] underline opacity-70"
-        onClick={() => setInnerJson(SAMPLE_MULTI)}
+        onClick={() => setUseAdvancedJson((v) => !v)}
       >
-        load sample 2× transfer
+        {useAdvancedJson ? 'use form editor' : 'use advanced JSON'}
       </button>
+
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -239,7 +282,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
             type="button"
             disabled={busy}
             onClick={() => void logout()}
-            className="px-3 py-2 rounded-xl text-sm bg-white/10 disabled:opacity-50"
+            className="px-3 py-2 rounded-xl text-sm bg-white/10"
           >
             Logout
           </button>
