@@ -1,30 +1,27 @@
 # WharfKit + eosio.msig
 
 **Trust label:** educational-reference  
-**Tier:** live session + packed propose trx (Pass 32+)
+**Tier:** packed multi-action propose + multi-wallet (Pass 33+)
 
-## Install
+## Wallets
 
-```bash
-npm install
-```
+SessionKit loads:
+
+- `@wharfkit/wallet-plugin-anchor`
+- `@wharfkit/wallet-plugin-cloudwallet` (optional if install succeeds)
+
+## Propose packing
+
+`packProposeActions` / `packProposeTransfer`:
+
+1. `get_info` → TAPOS header  
+2. `get_abi` per contract account  
+3. `Action.from` × N  
+4. `Transaction.from` → `Serializer.objectify` → `propose.data.trx`  
+5. Optional `proposal_hash` from transaction id (64-hex) for later `approve`
 
 ## Live path
 
-1. **Login (Anchor)** → SessionKit.
-2. Optional: **Preview packed propose.trx** (no wallet) — TAPOS + ABI pack only.
-3. Choose step → confirm checkbox → **Broadcast**.
+Login → preview pack (optional) → confirm → broadcast step.
 
-### Propose packing (`packProposeTrx.ts`)
-
-1. `APIClient` → `get_info()` → `getTransactionHeader(expireSeconds)`.
-2. `get_abi("eosio.token")` → `Action.from({ transfer… }, abi)`.
-3. `Transaction.from({ …header, actions })`.
-4. `Serializer.objectify(transaction)` → `propose.data.trx`.
-5. `session.transact({ action: proposeAction })`.
-
-Approve / exec / cancel do not need an inner packed trx.
-
-## Prefer WharfKit
-
-Use **WharfKit Session** over greenfield eosjs or Anchor Link-only stacks for new WAX dApps.
+Prefer **WharfKit** over eosjs / Anchor Link-only stacks.

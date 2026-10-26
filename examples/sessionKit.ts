@@ -1,6 +1,6 @@
 /**
  * WharfKit SessionKit factory for WAX mainnet.
- * Optional peer path — app still runs offline without a live wallet.
+ * Anchor + My Cloud Wallet plugins when packages resolve.
  */
 
 import { WAX_MAINNET_CHAIN_ID } from "./chainId";
@@ -26,13 +26,10 @@ export type SessionKitLike = {
   restore: () => Promise<SessionLike | undefined>;
 };
 
-/**
- * Build a SessionKit for browser hosts.
- * Dynamic-imports WharfKit so vitest/offline paths stay light.
- */
 export async function createWaxSessionKit(appName = "pxj-msig-builder"): Promise<{
   ok: true;
   kit: SessionKitLike;
+  wallets: string[];
 } | { ok: false; reason: string }> {
   try {
     const [{ SessionKit }, { WalletPluginAnchor }, { WebRenderer }] =
@@ -41,13 +38,31 @@ export async function createWaxSessionKit(appName = "pxj-msig-builder"): Promise
         import("@wharfkit/wallet-plugin-anchor"),
         import("@wharfkit/web-renderer"),
       ]);
+
+    const walletPlugins: unknown[] = [new WalletPluginAnchor()];
+    const wallets = ["anchor"];
+
+    try {
+      const { WalletPluginCloudWallet } = await import(
+        "@wharfkit/wallet-plugin-cloudwallet"
+      );
+      walletPlugins.push(
+        new WalletPluginCloudWallet({
+          supportedChains: [WAX_MAINNET_CHAIN_ID],
+        })
+      );
+      wallets.push("cloudwallet");
+    } catch {
+      /* optional peer */
+    }
+
     const kit = new SessionKit({
       appName,
       chains: [WAX_MAINNET],
       ui: new WebRenderer(),
-      walletPlugins: [new WalletPluginAnchor()],
+      walletPlugins,
     }) as unknown as SessionKitLike;
-    return { ok: true, kit };
+    return { ok: true, kit, wallets };
   } catch (e) {
     return {
       ok: false,

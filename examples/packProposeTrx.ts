@@ -1,6 +1,6 @@
 /**
- * Build a real inner Transaction for eosio.msig::propose.data.trx
- * using @wharfkit/antelope (TAPOS header + ABI-encoded actions).
+ * Pack inner Transaction(s) for eosio.msig::propose.data.trx
+ * using @wharfkit/antelope (TAPOS + ABI-encoded actions).
  */
 
 import { DEFAULT_RPC, normalizeRpcBase } from "./rpcEndpoints";
@@ -8,30 +8,62 @@ import type { Auth, ChainAction } from "./msigActions";
 import { buildProposeAction } from "./msigActions";
 import type { InnerTransferSpec } from "./proposeTrx";
 
+export type PlainInnerAction = {
+  account: string;
+  name: string;
+  authorization: Auth[];
+  data: Record<string, unknown>;
+};
+
 export type PackProposeResult =
   | {
       ok: true;
       proposeAction: ChainAction;
       trxObject: Record<string, unknown>;
       transactionId?: string;
+      proposalHash?: string;
       note: string;
     }
   | { ok: false; reason: string };
 
+/** Normalize transaction id / checksum for optional approve.proposal_hash. */
+export function proposalHashFromId(id?: string): string | undefined {
+  if (!id) return undefined;
+  const hex = id.replace(/^0x/i, "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(hex)) return undefined;
+  return hex;
+}
+
+export function transferToPlainAction(spec: InnerTransferSpec): PlainInnerAction {
+  return {
+    account: "eosio.token",
+    name: "transfer",
+    authorization: [{ actor: spec.from, permission: "active" }],
+    data: {
+      from: spec.from,
+      to: spec.to,
+      quantity: spec.quantity,
+      memo: spec.memo ?? "",
+    },
+  };
+}
+
 /**
- * Fetch get_info + token ABI, build Transaction with TAPOS header,
- * encode transfer action data, return outer propose ChainAction.
+ * Pack one or more plain actions into a TAPOS Transaction for propose.trx.
+ * ABI fetched per unique contract account.
  */
-export async function packProposeTransfer(input: {
+export async function packProposeActions(input: {
   proposer: string;
   proposalName: string;
   requested: Auth[];
-  inner: InnerTransferSpec;
+  actions: PlainInnerAction[];
   rpcBase?: string;
   permission?: string;
-  /** Expiration seconds for *inner* deferred-style header (msig payload). */
   expireSeconds?: number;
 }): Promise<PackProposeResult> {
+  if (!input.actions?.length) {
+    return { ok: false, reason: "at least one inner action required" };
+  }
   try {
     const { APIClient, Action, Transaction, Serializer } = await import(
       "@wharfkit/antelope"
@@ -41,30 +73,34 @@ export async function packProposeTransfer(input: {
     const info = await client.v1.chain.get_info();
     const header = info.getTransactionHeader(input.expireSeconds ?? 3600);
 
-    const abiRes = await client.v1.chain.get_abi("eosio.token");
-    const abi = abiRes.abi;
-    if (!abi) return { ok: false, reason: "eosio.token ABI missing" };
-
-    const action = Action.from(
-      {
-        account: "eosio.token",
-        name: "transfer",
-        authorization: [
-          { actor: input.inner.from, permission: "active" },
-        ],
-        data: {
-          from: input.inner.from,
-          to: input.inner.to,
-          quantity: input.inner.quantity,
-          memo: input.inner.memo ?? "",
-        },
-      },
-      abi
-    );
+    const abiCache = new Map<string, unknown>();
+    const encodedActions = [];
+    for (const a of input.actions) {
+      let abi = abiCache.get(a.account);
+      if (!abi) {
+        const abiRes = await client.v1.chain.get_abi(a.account);
+        if (!abiRes.abi) {
+          return { ok: false, reason: `ABI missing for ${a.account}` };
+        }
+        abi = abiRes.abi;
+        abiCache.set(a.account, abi);
+      }
+      encodedActions.push(
+        Action.from(
+          {
+            account: a.account,
+            name: a.name,
+            authorization: a.authorization,
+            data: a.data,
+          },
+          abi as never
+        )
+      );
+    }
 
     const transaction = Transaction.from({
       ...header,
-      actions: [action],
+      actions: encodedActions,
     });
 
     const trxObject = Serializer.objectify(transaction) as Record<
@@ -76,6 +112,7 @@ export async function packProposeTransfer(input: {
       "function"
         ? String((transaction as { id: { toString(): string } }).id)
         : undefined;
+    const proposalHash = proposalHashFromId(transactionId);
 
     const proposeAction = buildProposeAction({
       proposer: input.proposer,
@@ -90,12 +127,34 @@ export async function packProposeTransfer(input: {
       proposeAction,
       trxObject,
       transactionId,
-      note: "Inner trx packed with TAPOS header + ABI-encoded transfer; ready for session.transact propose",
+      proposalHash,
+      note: `Packed ${encodedActions.length} action(s) with TAPOS + ABI; proposal_hash=${proposalHash ?? "n/a"}`,
     };
   } catch (e) {
     return {
       ok: false,
-      reason: e instanceof Error ? e.message : "packProposeTransfer failed",
+      reason: e instanceof Error ? e.message : "packProposeActions failed",
     };
   }
+}
+
+/** Convenience: single eosio.token::transfer inner action. */
+export async function packProposeTransfer(input: {
+  proposer: string;
+  proposalName: string;
+  requested: Auth[];
+  inner: InnerTransferSpec;
+  rpcBase?: string;
+  permission?: string;
+  expireSeconds?: number;
+}): Promise<PackProposeResult> {
+  return packProposeActions({
+    proposer: input.proposer,
+    proposalName: input.proposalName,
+    requested: input.requested,
+    rpcBase: input.rpcBase,
+    permission: input.permission,
+    expireSeconds: input.expireSeconds,
+    actions: [transferToPlainAction(input.inner)],
+  });
 }

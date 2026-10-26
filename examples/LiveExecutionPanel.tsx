@@ -27,10 +27,6 @@ export type LiveExecutionPanelProps = {
   className?: string;
 };
 
-/**
- * Guarded live path: login optional, every broadcast needs explicit confirm.
- * Propose uses packProposeTransfer (TAPOS + ABI) when possible.
- */
 export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   const [session, setSession] = useState<SessionLike | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -40,6 +36,8 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     'propose'
   );
   const [lastTrxPreview, setLastTrxPreview] = useState<string | null>(null);
+  const [proposalHash, setProposalHash] = useState<string | undefined>();
+  const [wallets, setWallets] = useState<string[]>([]);
 
   const login = async () => {
     setBusy(true);
@@ -49,10 +47,11 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
       setBusy(false);
       return;
     }
+    setWallets(r.wallets);
     try {
       const { session: s } = await r.kit.login();
       setSession(s);
-      setStatus(`Logged in as ${actorString(s)}`);
+      setStatus(`Logged in as ${actorString(s)} · wallets: ${r.wallets.join(', ')}`);
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'login failed');
     }
@@ -91,12 +90,13 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
         return;
       }
       action = packed.proposeAction;
+      setProposalHash(packed.proposalHash);
       setLastTrxPreview(
         JSON.stringify(packed.trxObject, null, 2).slice(0, 1200)
       );
       setStatus(
-        packed.transactionId
-          ? `Packed inner trx id ${packed.transactionId} — broadcasting propose…`
+        packed.proposalHash
+          ? `Packed · proposal_hash ${packed.proposalHash.slice(0, 16)}… — broadcasting propose…`
           : 'Packed inner trx — broadcasting propose…'
       );
     } else if (step === 'approve') {
@@ -105,6 +105,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
         proposer: props.proposer,
         proposalName: props.proposalName,
         level: { actor, permission: 'active' },
+        proposal_hash: proposalHash,
       });
     } else if (step === 'exec') {
       action = buildExecAction({
@@ -149,6 +150,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
       setStatus(`pack preview soft-fail: ${packed.reason}`);
       return;
     }
+    setProposalHash(packed.proposalHash);
     setLastTrxPreview(JSON.stringify(packed.trxObject, null, 2).slice(0, 2000));
     setStatus(packed.note);
   };
@@ -161,7 +163,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     >
       <h3 className="text-sm tracking-widest text-amber-400">LIVE WHARFKIT (GUARDED)</h3>
       <p className="text-[11px] opacity-70">
-        Explicit confirm required. Propose packs inner trx via get_info TAPOS + eosio.token ABI.
+        Anchor + Cloud Wallet when installed. Propose packs multi-ABI TAPOS trx; approve may attach proposal_hash.
       </p>
       <div className="flex flex-wrap gap-2">
         <button
@@ -170,7 +172,9 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
           onClick={() => void login()}
           className="px-3 py-2 rounded-xl text-sm bg-sky-900 disabled:opacity-50"
         >
-          {session ? `Session: ${actorString(session)}` : 'Login (Anchor)'}
+          {session
+            ? `Session: ${actorString(session)}`
+            : 'Login (Anchor / Cloud Wallet)'}
         </button>
         <button
           type="button"
@@ -193,6 +197,14 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
           </button>
         ))}
       </div>
+      {wallets.length > 0 && (
+        <p className="text-[10px] opacity-50">Plugins: {wallets.join(', ')}</p>
+      )}
+      {proposalHash && (
+        <p className="text-[10px] font-mono opacity-60">
+          proposal_hash: {proposalHash}
+        </p>
+      )}
       <label className="flex items-center gap-2 text-xs">
         <input
           type="checkbox"
