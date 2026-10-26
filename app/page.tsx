@@ -32,6 +32,7 @@ import {
   buildLifecycleSketch,
   lifecycleToJson,
 } from '../examples/lifecycleSequence';
+import { LiveExecutionPanel } from '../examples/LiveExecutionPanel';
 import { RelatedBlueprints } from '../examples/RelatedBlueprints';
 import {
   buildApproveAction,
@@ -345,7 +346,7 @@ export default function MultiSigProposalBuilder() {
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-5xl mx-auto">
         <div className="text-2xl tracking-widest text-emerald-400 mb-2 font-bold">MULTI-SIG PROPOSAL BUILDER</div>
-        <div className="text-xs opacity-60 mb-2">Pass 29 · normalize permissions{!hydrated && ' · hydrating…'}</div>
+        <div className="text-xs opacity-60 mb-2">Pass 31 · live WharfKit guarded tier{!hydrated && ' · hydrating…'}</div>
 
         <div className="flex flex-wrap gap-2 mb-6">
           {PRESETS.map((p) => (
@@ -498,6 +499,18 @@ export default function MultiSigProposalBuilder() {
               setProposalHash(r.config.proposalHash ?? '');
               setStatus('Imported draft JSON');
             }}>Import JSON</button>
+        </section>
+
+        <section className="mt-8">
+          <LiveExecutionPanel
+            proposer={proposer}
+            proposalName={proposalName}
+            requested={approvals.map((a) => ({
+              actor: a.account,
+              permission: a.permission ?? 'active',
+            }))}
+            actionSummary={actionSummary}
+          />
         </section>
 
         {status && (<p className="mt-6 text-xs text-emerald-200/80" role="status">{status}</p>)}
