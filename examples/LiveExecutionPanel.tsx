@@ -7,12 +7,14 @@ import {
   buildExecAction,
   type ChainAction,
 } from './msigActions';
-import { buildProposeEnvelope, transactSimpleAction } from './proposeTrx';
+import { packProposeTransfer } from './packProposeTrx';
+import { transactSimpleAction } from './proposeTrx';
 import {
   actorString,
   createWaxSessionKit,
   type SessionLike,
 } from './sessionKit';
+import { DEFAULT_RPC } from './rpcEndpoints';
 
 export type LiveExecutionPanelProps = {
   proposer: string;
@@ -21,13 +23,13 @@ export type LiveExecutionPanelProps = {
   actionSummary?: string;
   transferTo?: string;
   transferQuantity?: string;
+  rpcBase?: string;
   className?: string;
 };
 
 /**
  * Guarded live path: login optional, every broadcast needs explicit confirm.
- * Propose still requires host-grade trx serialization for production success;
- * this panel surfaces the real session.transact call path educationally.
+ * Propose uses packProposeTransfer (TAPOS + ABI) when possible.
  */
 export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   const [session, setSession] = useState<SessionLike | null>(null);
@@ -37,6 +39,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
   const [step, setStep] = useState<'propose' | 'approve' | 'exec' | 'cancel'>(
     'propose'
   );
+  const [lastTrxPreview, setLastTrxPreview] = useState<string | null>(null);
 
   const login = async () => {
     setBusy(true);
@@ -67,11 +70,13 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     }
     setBusy(true);
     let action: ChainAction;
+
     if (step === 'propose') {
-      const env = buildProposeEnvelope({
+      const packed = await packProposeTransfer({
         proposer: props.proposer,
         proposalName: props.proposalName,
         requested: props.requested,
+        rpcBase: props.rpcBase ?? DEFAULT_RPC,
         inner: {
           from: props.proposer,
           to: props.transferTo ?? 'bob.wam',
@@ -79,9 +84,20 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
           memo: props.actionSummary ?? 'msig educational',
         },
       });
-      action = env.outer;
+      if (!packed.ok) {
+        setStatus(`pack propose soft-fail: ${packed.reason}`);
+        setBusy(false);
+        setConfirmed(false);
+        return;
+      }
+      action = packed.proposeAction;
+      setLastTrxPreview(
+        JSON.stringify(packed.trxObject, null, 2).slice(0, 1200)
+      );
       setStatus(
-        'Note: propose.trx may still need full WharfKit serialization for chain accept — see WHARFKIT.md'
+        packed.transactionId
+          ? `Packed inner trx id ${packed.transactionId} — broadcasting propose…`
+          : 'Packed inner trx — broadcasting propose…'
       );
     } else if (step === 'approve') {
       const actor = actorString(session);
@@ -103,6 +119,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
         canceler: actorString(session),
       });
     }
+
     const r = await transactSimpleAction(session, action);
     setStatus(
       r.ok
@@ -113,6 +130,29 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     setBusy(false);
   };
 
+  const previewPack = async () => {
+    setBusy(true);
+    const packed = await packProposeTransfer({
+      proposer: props.proposer,
+      proposalName: props.proposalName,
+      requested: props.requested,
+      rpcBase: props.rpcBase ?? DEFAULT_RPC,
+      inner: {
+        from: props.proposer,
+        to: props.transferTo ?? 'bob.wam',
+        quantity: props.transferQuantity ?? '0.00000001 WAX',
+        memo: props.actionSummary ?? 'msig educational',
+      },
+    });
+    setBusy(false);
+    if (!packed.ok) {
+      setStatus(`pack preview soft-fail: ${packed.reason}`);
+      return;
+    }
+    setLastTrxPreview(JSON.stringify(packed.trxObject, null, 2).slice(0, 2000));
+    setStatus(packed.note);
+  };
+
   return (
     <div
       className={`rounded-2xl border border-amber-500/40 bg-black/50 p-4 space-y-3 ${
@@ -121,7 +161,7 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
     >
       <h3 className="text-sm tracking-widest text-amber-400">LIVE WHARFKIT (GUARDED)</h3>
       <p className="text-[11px] opacity-70">
-        Explicit confirm required. No auto-broadcast. Propose may need packed trx serialization for mainnet success.
+        Explicit confirm required. Propose packs inner trx via get_info TAPOS + eosio.token ABI.
       </p>
       <div className="flex flex-wrap gap-2">
         <button
@@ -131,6 +171,14 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
           className="px-3 py-2 rounded-xl text-sm bg-sky-900 disabled:opacity-50"
         >
           {session ? `Session: ${actorString(session)}` : 'Login (Anchor)'}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void previewPack()}
+          className="px-3 py-2 rounded-xl text-sm bg-violet-900 disabled:opacity-50"
+        >
+          Preview packed propose.trx
         </button>
         {(['propose', 'approve', 'exec', 'cancel'] as const).map((s) => (
           <button
@@ -162,6 +210,11 @@ export function LiveExecutionPanel(props: LiveExecutionPanelProps) {
       >
         {busy ? 'Working…' : `Broadcast ${step}`}
       </button>
+      {lastTrxPreview && (
+        <pre className="text-[9px] opacity-60 overflow-auto max-h-40 whitespace-pre-wrap font-mono">
+          {lastTrxPreview}
+        </pre>
+      )}
       {status && (
         <p className="text-[11px] text-emerald-200/80 font-mono" role="status">
           {status}

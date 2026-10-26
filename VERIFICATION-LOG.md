@@ -1,13 +1,13 @@
 # Verification Log
 
 **Trust label:** educational-reference  
-**Updated:** 2026-10-26 (Pass 31 next tier)
+**Updated:** 2026-10-26 (Pass 32)
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Pass 1–30 freeze | docs | REFINEMENT_COMPLETION_REPORT.md |
-| propose envelope unit | **verified** | proposeTrx.test.ts |
-| Live session.transact | host + wallet | LiveExecutionPanel — not CI-executed |
+| packProposeTransfer export | unit | packProposeTrx.test.ts |
+| Live pack against RPC | soft-fail in UI | Preview packed propose.trx |
+| Live session.transact | host + wallet | not CI-executed |
 
 ```bash
 npm install && npm test

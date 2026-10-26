@@ -1,19 +1,17 @@
 # wax-multi-sig-proposal-builder-and-simulator
 
 > **Trust label:** `educational-reference`  
-> **Status:** Passes **1–30** freeze + **Pass 31** live WharfKit tier (2026-10-26)
+> **Status:** Passes **1–30** freeze + **31–32** live WharfKit / packed propose (2026-10-26)
 
-Simulate **M-of-N / weighted** multi-sig thresholds, probe `eosio.msig` tables, and optionally **login + broadcast** guarded steps via **WharfKit**.
+Simulate **M-of-N / weighted** multi-sig thresholds, probe `eosio.msig`, and optionally **login + broadcast** with **packed inner trx** for propose.
 
-## Highlights
+## Live tier
 
-- Offline: threshold tools, risk, share URL, exports, table probes
-- Live (guarded): Anchor login, confirm-required propose / approve / exec / cancel
-- Action builders for real `eosio.msig` payload shapes
+- Anchor login via WharfKit SessionKit
+- Confirm-required propose / approve / exec / cancel
+- `packProposeTransfer`: `get_info` TAPOS + `eosio.token` ABI → `propose.data.trx`
 
-## Docs
-
-[WHARFKIT.md](./WHARFKIT.md) · [POLICY.md](./POLICY.md) · [ARCHITECTURE.md](./ARCHITECTURE.md)
+[WHARFKIT.md](./WHARFKIT.md) · [POLICY.md](./POLICY.md)
 
 ```bash
 npm install && npm test && npm run dev
