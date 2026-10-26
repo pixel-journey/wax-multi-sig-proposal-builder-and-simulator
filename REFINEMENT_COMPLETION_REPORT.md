@@ -1,15 +1,15 @@
-# Multi-sig builder — through Pass 36
+# Multi-sig builder — through Pass 37
 
 **Trust label:** educational-reference  
 **Updated:** 2026-10-26
 
 | Pass | Notes |
 |------|-------|
-| 1–35 | Simulation + live WharfKit + docs freeze |
-| **36** | Form-based multi-action inner editor (JSON remains as advanced toggle) |
+| 1–36 | Simulation, live WharfKit, form multi-action editor |
+| **37** | CI runs tests; Tailwind/PostCSS/Next config; DEPLOY.md |
 
-Still out of scope: proposal history indexer, CI mainnet broadcast.
+Out of scope: mainnet broadcast in CI, full proposal indexer.
 
 ```bash
-npm install && npm test && npm run dev
+npm install && npm test && npm run build && npm run dev
 ```

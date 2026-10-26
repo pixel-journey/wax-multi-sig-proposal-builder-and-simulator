@@ -1,15 +1,14 @@
 # Verification Log
 
 **Trust label:** educational-reference  
-**Updated:** 2026-10-26 (Pass 35 complete)
+**Updated:** 2026-10-26 (Pass 37)
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Pure engines | unit | vitest under `examples/` |
-| Pack / parse helpers | unit | packProposeTrx.test.ts, parseInnerActions.test.ts |
-| Live session.transact | host + wallet | LiveExecutionPanel — not CI-executed |
-| Wallets | policy | Anchor + Cloud Wallet only |
+| Unit tests | CI | `npm test` in ci.yml |
+| Typecheck + build | CI | ci.yml |
+| Live session.transact | host + wallet | not CI-executed |
 
 ```bash
-npm install && npm test
+npm install && npm test && npm run typecheck && npm run build
 ```
