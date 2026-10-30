@@ -1,14 +1,24 @@
-# Policy
+# Policy — multi-sig proposal builder
 
-**Threshold / risk engines** are pure math (safe offline, unit-tested).
+**Trust label:** `educational-reference`  
+**Status:** Passes 1–38 · educational + live tier complete (2026-10-30)
 
-**Live multi-sig** uses native `eosio.msig` (propose / approve / unapprove / cancel / exec) with a real **WharfKit** `session.transact` path in `LiveExecutionPanel`.
+## In scope
 
-Rules:
+- Pure threshold / approval / risk engines (unit-tested, offline-safe)
+- `eosio.msig` propose · approve · unapprove · cancel · exec education
+- Inner `trx` packing (TAPOS + ABI) for real proposals
+- Optional live path via **WharfKit** with explicit confirm
+- Wallets: **Anchor** · **My Cloud Wallet** only
 
-- No silent broadcast from unit tests or pure engines.
-- Every live step requires an explicit confirm checkbox.
-- Wallets: **Anchor** and **My Cloud Wallet** only (no abandoned plugins).
-- Propose packs inner `trx` via TAPOS + ABI (`packProposeActions`); approve may attach `proposal_hash`.
+## Out of scope
 
-See [WHARFKIT.md](./WHARFKIT.md).
+- Silent mainnet broadcast from tests or pure engines
+- Full proposal indexer / explorer product
+- Abandoned wallet plugins
+- Permanent account permission multi-sig design alone → visualizer / social recovery / rotation
+
+## Rules
+
+- Every live step requires an explicit confirm checkbox
+- Prefer WharfKit over eosjs / Anchor Link for greenfield

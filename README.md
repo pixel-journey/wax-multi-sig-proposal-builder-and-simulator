@@ -1,16 +1,16 @@
 # wax-multi-sig-proposal-builder-and-simulator
 
 > **Trust label:** `educational-reference`  
-> **Status:** Educational + live tier complete · **Pass 37** CI / deploy readiness (2026-10-26)
+> **Status:** Educational + live tier complete · **Pass 38** cluster alignment (2026-10-30)
 
-Simulate **M-of-N / weighted** multi-sig, probe `eosio.msig`, pack real inner transactions, and optionally broadcast with **WharfKit** (**Anchor** + **My Cloud Wallet**).
+Simulate **M-of-N / weighted** multi-sig, probe `eosio.msig`, pack real inner transactions, optionally broadcast with **WharfKit** (**Anchor** + **My Cloud Wallet**).
 
-## Quick start
+**Pass 38:** Security-cluster EDUCATION map · myths · related blueprint blurbs · POLICY lock.
 
 ```bash
-npm install && npm test && npm run dev
+npm install && npm test && npm run build && npm run dev
 ```
 
-[DEPLOY.md](./DEPLOY.md) · [WHARFKIT.md](./WHARFKIT.md) · [examples/EDUCATION.md](./examples/EDUCATION.md)
+[DEPLOY.md](./DEPLOY.md) · [WHARFKIT.md](./WHARFKIT.md) · [examples/EDUCATION.md](./examples/EDUCATION.md) · [POLICY.md](./POLICY.md)
 
 MIT — Pixel Journey

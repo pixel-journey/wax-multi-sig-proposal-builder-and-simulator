@@ -2,7 +2,7 @@
 
 ## 1. Account permission multi-sig
 
-`account` permissions (`owner` / `active` / custom) with **weighted keys or accounts** and a **threshold**. Any action authorized by that permission needs enough weight. Edited via `eosio::updateauth` (see permission visualizer / key-rotation repos).
+`account` permissions (`owner` / `active` / custom) with **weighted keys or accounts** and a **threshold**. Any action authorized by that permission needs enough weight. Edited via `eosio::updateauth` (see permission visualizer / key-rotation / auditor).
 
 ## 2. `eosio.msig` proposals (this repo)
 
@@ -21,3 +21,14 @@ This builder focuses on **(2)**: simulate thresholds, build action JSON, pack re
 - **My Cloud Wallet**
 
 Skip abandoned or sold-off wallet stacks in educational examples.
+
+## Security cluster map
+
+| Need | Repo |
+|------|------|
+| msig propose/approve/exec | **This** |
+| Permission tree / threshold lab | permission-visualizer |
+| Batch structure risk | account-permission-auditor |
+| Rotate keys safely | safe-key-rotation-assistant |
+| Social recovery design | social-recovery-and-key-backup-tools |
+| Hardware cold owner | hardware-wallet-integration-patterns |
