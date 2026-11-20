@@ -1,16 +1,31 @@
-# wax-multi-sig-proposal-builder-and-simulator
+# A named eosio.msig proposal — not an account threshold
 
-> **Trust label:** `educational-reference`  
-> **Status:** Educational + live tier complete · **Pass 38** cluster alignment (2026-10-30)
+> **Trust:** `educational-reference`  
+> **Course:** [examples/EDUCATION.md](examples/EDUCATION.md)
 
-Simulate **M-of-N / weighted** multi-sig, probe `eosio.msig`, pack real inner transactions, optionally broadcast with **WharfKit** (**Anchor** + **My Cloud Wallet**).
+**One-sentence goal:** Tell a permission weight apart from an `eosio.msig` proposal, and lock the arithmetic: one of three approvals at threshold 2 is 50% and still needs 1 more weight. Majority of three equal weights is 2. Supermajority of those same three is also 2.
 
-**Pass 38:** Security-cluster EDUCATION map · myths · related blueprint blurbs · POLICY lock.
+**Code under test:** `npm test` (56). Action bodies are shapes. The tests do not broadcast.
+
+The WAX mainnet chain id in this repo matches `get_info` on `wax.greymass.com` as of 2026-11-20:
+
+`1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4`
+
+The previous constant in this file did not. The test now pins the full string.
+
+Contract reference: [eosio.msig](https://github.com/AntelopeIO/reference-contracts/tree/main/contracts/eosio.msig). Permission model: [WAX permissions](https://docs.wax.io/build/core-concepts/permissions). Wallet path, if you later sign: [WharfKit](https://wharfkit.com/).
+
+## Related
+
+- [social recovery](https://github.com/pixel-journey/wax-social-recovery-and-key-backup-tools) — the account-weight kind
+- [visualizer](https://github.com/pixel-journey/wax-permission-visualizer-and-editor)
+- [auditor](https://github.com/pixel-journey/wax-account-permission-auditor)
+- [rotation](https://github.com/pixel-journey/wax-safe-key-rotation-assistant)
+- [hardware](https://github.com/pixel-journey/wax-hardware-wallet-integration-patterns)
+- [session keys](https://github.com/pixel-journey/wax-wharfkit-session-keys-and-linked-permissions)
 
 ```bash
-npm install && npm test && npm run build && npm run dev
+npm test
 ```
-
-[DEPLOY.md](./DEPLOY.md) · [WHARFKIT.md](./WHARFKIT.md) · [examples/EDUCATION.md](./examples/EDUCATION.md) · [POLICY.md](./POLICY.md)
 
 MIT — Pixel Journey
