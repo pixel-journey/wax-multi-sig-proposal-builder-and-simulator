@@ -10,7 +10,8 @@ describe("riskScore", () => {
       approvals: [{ account: "a", weight: 1, hasApproved: false }],
     });
     const { score, label } = aggregateRiskScore(risks);
-    expect(score).toBeGreaterThanOrEqual(55);
-    expect(["high", "critical"]).toContain(label);
+    expect(risks.map((risk) => risk.id)).toEqual(["impossible", "single-approver"]);
+    expect(score).toBe(60);
+    expect(label).toBe("high");
   });
 });

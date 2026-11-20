@@ -9,7 +9,7 @@
 | --- | --- |
 | three weights of 1, one approved, threshold 2 | approved weight `1`, not met, progress `50` |
 | `weightNeeded` on that snapshot | `1`, line contains `Need 1` |
-| threshold 10, one approver of weight 1 | risk id `impossible` |
+| threshold 10, one approver of weight 1 | risks `impossible` and `single-approver`, both high. Score is `10 + 25 + 25 = 60`, label `high`. Critical starts at 75, so this fixture is not critical. |
 | threshold 5, weights 1+1 | `checkThresholdFeasibility` is not ok |
 | threshold 2, weights 1+1 | feasible |
 | `suggestMajorityThreshold` of three 1s | `2` (`floor(3/2)+1`) |
